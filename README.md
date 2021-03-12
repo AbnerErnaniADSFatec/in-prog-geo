@@ -6,16 +6,16 @@ This space is reserved to class notes for Introduction to Geo Programming.
 
 Some commands to create and push files to git repository.
 
- - **Step 1**: Create a git user profile and click in repositories tab, in following click in `New`;
- - **Step 2**: Create an empty repository with a name and description add `license` and `.gitignore` after the first files;
- - **Step 3**: Create a folder with the same name you put in repository and move your files to there;
- - **Step 4**: With a [`Git Command Line Interface`](https://git-scm.com/downloads) installation, open `terminal` or `CMD` (The terminal must be open on your choice folder);
- - **Step 5**: Fist command for initialize git repository and add your files:
+ - **Step 1**: Create a git user profile and click on the repositories tab, then click on `New`;
+ - **Step 2**: Create an empty repository with a name and description, add `license` and ` .gitignore` after the first files;
+ - **Step 3**: Create a folder with the same name that you put in the repository and move your files there;
+ - **Step 4**: With a [`Git Command Line Interface`] installation (https://git-scm.com/downloads), open the` terminal` or `CMD` (The terminal must be opened in the folder of your choice);
+ - **Step 5**: First command to initialize the git repository and add its files:
 ~~~shell
 git init
 git add .
 ~~~
- - **Step 6**: Add remote origin for upload files, you get the url named as your repository created before:
+ - **Step 6**: Add remote origin for upload files, you need to put the named url as your repository created before:
 ~~~shell
 git remote add -f origin https://github.com/AbnerErnaniADSFatec/in-prog-geo
 ~~~
@@ -24,11 +24,11 @@ git remote add -f origin https://github.com/AbnerErnaniADSFatec/in-prog-geo
 git config --global user.name "<my user>"
 git config --global user.email "<my e-mail>"
 ~~~
- - **Step 8**: Commit your files. A commit is a proof that you is active user, it is a update that you did. Every commit needs a description or message like "fix issue" or "fix bug" and your name will be marked in this update.
+ - **Step 8**: Commit your files. A commit is proof that you are an active user, is an update that you did. Every commit needs a description or message like "fix problem" or "fix bug" and your name will be marked in this update.
 ~~~shell
 git commit -m "First notes for geo program" .
 ~~~
- - **Step 9**: Finally push your files to remote repository.
+ - **Step 9**: Finally, send/send your files to the remote repository.
 ~~~shell
 git push origin master
 ~~~
@@ -56,4 +56,4 @@ $ conda activate in-prog-geo
 (in-prog-geo) $ jupyter notebook
 ~~~
 
-> **Obs.:** The notebook could not recognize the kernel installed by conda, to fix this you must change kernel manually in `kernel >> Change Kernel >> in-prog-geo`.
+> **Obs.:** The notebook may not be able to recognize the kernel installed by conda, to fix it you must change the kernel manually in `kernel >> Change Kernel >> in-prog-geo`.
