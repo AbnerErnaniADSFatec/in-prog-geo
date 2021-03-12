@@ -1,7 +1,7 @@
 git init
 git add .
-git remote add -f origin
-git config --global user.name ""
-git config --global user.email ""
-git commit -m "" .
+git remote add -f origin https://github.com/AbnerErnaniADSFatec/in-prog-geo
+git config --global user.name "<my user>"
+git config --global user.email "<my e-mail>"
+git commit -m "First notes for geo program" .
 git push origin master
