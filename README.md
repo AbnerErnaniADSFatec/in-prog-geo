@@ -4,7 +4,7 @@ This space is reserved to class notes for Introduction to Geo Programming.
 
 ## Git Repository
 
-Some commands to create and push files to git repository.
+Some [commands](./comandos-git) to create and push files to git repository.
 
  - **Step 1**: Create a git user profile and click on the repositories tab, then click on `New`;
  - **Step 2**: Create an empty repository with a name and description, add `license` and ` .gitignore` after the first files;
