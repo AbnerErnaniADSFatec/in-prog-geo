@@ -18,7 +18,7 @@ Dados de teste:
 
 São Paulo: Lat -23.54753994162255 Lon -46.64472359303465
 São José dos Campos: Lat -23.224858796012942 Lon -45.91413277272215
-Resultado esperado ~ 82.75 km
+Resultado esperado: ~ 82.75 km
 """
 
 import math
