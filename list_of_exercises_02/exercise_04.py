@@ -23,13 +23,13 @@ Resultado esperado: ~ 82.75 km
 
 import math
 
-p_lat_decimal = float(input("\n Latitude de p (grau demcimal) ° = "))
-p_lon_decimal = float(input(" Longitude de p (grau demcimal) ° = "))
+p_lat_decimal = float(input("\n Latitude de p (grau decimal) ° = "))
+p_lon_decimal = float(input(" Longitude de p (grau decimal) ° = "))
 
 print("\n p(%.2f,%.2f)" %(p_lat_decimal, p_lon_decimal))
 
-q_lat_decimal = float(input("\n Latitude de q (grau demcimal) ° = "))
-q_lon_decimal = float(input(" Longitude de q (grau demcimal) ° = "))
+q_lat_decimal = float(input("\n Latitude de q (grau decimal) ° = "))
+q_lon_decimal = float(input(" Longitude de q (grau decimal) ° = "))
 
 print("\n q(%.2f,%.2f)" %(q_lat_decimal, q_lon_decimal))
 
@@ -54,4 +54,4 @@ distancia = 2 * 6371 * math.asin(
     )
 )
 
-print("\n Distância (p,q) = %.10f Km\n" %distancia)
+print("\n Distância (p,q) = {d:,.10f} Km\n".format(d=distancia))
