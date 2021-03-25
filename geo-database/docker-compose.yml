@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  postgresql:
+    image: mdillon/postgis
+    container_name: postgresql
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5480:5432"
+    networks:
+      - postgresql-network
+
+  pgadmin4:
+      image: dpage/pgadmin4
+      container_name: pgadmin4
+      environment:
+        PGADMIN_DEFAULT_EMAIL: "abner.anjos@fatec.sp.gov.br"
+        PGADMIN_DEFAULT_PASSWORD: "postgres"
+      ports:
+        - "16543:80"
+      depends_on:
+        - postgresql
+      networks:
+        - postgresql-network
+
+networks:
+  postgresql-network:
+    driver: bridge
