@@ -29,3 +29,18 @@ $ docker-compose up -d postgresql pgadmin4
 ```
 
 **Obs.:** You will need to install the tool (docker-compose)[https://docs.docker.com/compose/] and don't forget to register the PostgreSQL database server to use the PGAdmin4 graphical interface with the necessary credentials.
+
+## PSQL Environment
+```
+## Installation of psql CLI environment command line interface
+$ sudo apt install postgresql
+```
+
+## Creating Database
+```
+## Creation of the database for the migration
+$ createdb -h 0.0.0.0 -p 5480 -U postgres bd_geo "Class notes and exercises for bd geo"
+
+## Database connection
+$ psql  -h 0.0.0.0 -p 5480 -U postgres bd_geo
+```
