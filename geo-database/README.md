@@ -42,5 +42,5 @@ $ sudo apt install postgresql
 $ createdb -h 0.0.0.0 -p 5480 -U postgres bd_geo "Class notes and exercises for bd geo"
 
 ## Database connection
-$ psql -h 0.0.0.0 -p 5480 -U postgres bd_geo
+$ psql -h 0.0.0.0 -p 5480 -U postgres -d bd_geo
 ```
