@@ -1,5 +1,8 @@
 # Geo DataBase Class Notes
 
+[![Docker](https://img.shields.io/badge/docker-latest-green)](https://www.docker.com/)
+[![Postgres](https://img.shields.io/badge/postgres-latest-green)](https://www.postgresql.org/)
+
 ## Creation of the PostgreSQL docker container
 
 ```
