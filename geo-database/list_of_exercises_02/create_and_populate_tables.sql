@@ -3,7 +3,7 @@
 -- 1 e 2. Criação das tabelas
 CREATE TABLE Instrutor (
     InstrutorID INT NOT NULL,
-    CPF	INT	NOT NULL UNIQUE,
+    CPF INT NOT NULL UNIQUE,
     Nome VARCHAR( 30 ) NOT NULL,
     Endereco VARCHAR( 60 ),
     CONSTRAINT InstrutorPK PRIMARY KEY (InstrutorID)
@@ -11,7 +11,7 @@ CREATE TABLE Instrutor (
 
 CREATE TABLE Aluno (
     AlunoID INT NOT NULL,
-    CPF	INT NOT NULL UNIQUE,
+    CPF INT NOT NULL UNIQUE,
     Nome VARCHAR( 30 ) NOT NULL,
     Endereco VARCHAR( 60 ),
     CONSTRAINT AlunoPK PRIMARY KEY (AlunoID)
@@ -35,9 +35,9 @@ CREATE TABLE Curso (
     CONSTRAINT CursoPK PRIMARY KEY (CursoID),
 
     CONSTRAINT CursoEscolaFK FOREIGN KEY (EscolaID)
-    	REFERENCES Escola(EscolaID)
-    	ON DELETE CASCADE
-    	ON UPDATE CASCADE
+     REFERENCES Escola(EscolaID)
+     ON DELETE CASCADE
+     ON UPDATE CASCADE
 );
 
 ALTER TABLE Aluno ALTER COLUMN Nome TYPE VARCHAR( 50 );
