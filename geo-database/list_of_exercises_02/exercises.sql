@@ -3,35 +3,35 @@
 -- Exercise 01 and 02
 
 CREATE TABLE Instrutor (
-    InstrutorID   	INT   			NOT NULL,
-    CPF				INT				NOT NULL  UNIQUE,
-    Nome  			VARCHAR( 30 )  	NOT NULL,
-    Endereco   		VARCHAR( 60 ),
+    InstrutorID INT NOT NULL,
+    CPF INT NOT NULL UNIQUE,
+    Nome VARCHAR(30) NOT NULL,
+    Endereco VARCHAR(60),
     CONSTRAINT InstrutorPK PRIMARY KEY (InstrutorID)
 );
 
 CREATE TABLE Aluno (
-    AlunoID   		INT   			NOT NULL,
-    CPF				INT				NOT NULL  UNIQUE,
-    Nome  			VARCHAR( 30 )  	NOT NULL,
-    Endereco   		VARCHAR( 60 ),
+    AlunoID INT NOT NULL,
+    CPF INT NOT NULL UNIQUE,
+    Nome VARCHAR(30) NOT NULL,
+    Endereco VARCHAR(60),
     CONSTRAINT AlunoPK PRIMARY KEY (AlunoID)
 );
 
 CREATE TABLE Escola (
-    EscolaID   		INT   			NOT NULL,
-    CNPJ			INT				NOT NULL  UNIQUE,
-    Nome  			VARCHAR( 30 )  	NOT NULL,
-    Endereco   		VARCHAR( 60 ),
+    EscolaID INT NOT NULL,
+    CNPJ INT NOT NULL UNIQUE,
+    Nome VARCHAR(30) NOT NULL,
+    Endereco VARCHAR(60),
     CONSTRAINT EscolaPK PRIMARY KEY (EscolaID)
 );
 
 CREATE TABLE Curso (
-    CursoID   		INT   			NOT NULL,
-    Nome  			VARCHAR( 30 )  	NOT NULL,
-    Carga_horaria	INT 			NOT NULL,
-    Ementa			VARCHAR( 500 )	,
-    EscolaID        INT 			NOT NULL,
+    CursoID INT NOT NULL,
+    Nome VARCHAR(30) NOT NULL,
+    Carga_horaria INT NOT NULL,
+    Ementa VARCHAR( 500 )	,
+    EscolaID INT NOT NULL,
 
     CONSTRAINT CursoPK PRIMARY KEY (CursoID),
 
@@ -67,7 +67,6 @@ CREATE TABLE Matricula (
     AlunoID INT NOT NULL,
     Nota_final NUMERIC(4,2) ,
     Presenca INT ,
-
 
     CONSTRAINT MatriculaPK PRIMARY KEY (TurmaID, AlunoID),
 
@@ -224,5 +223,128 @@ SELECT * FROM information_schema.columns WHERE table_schema='public';
 -- 6.d
 SELECT * FROM information_schema.table_constraints WHERE table_schema='public';
 --
+
+--
+
+-- Exercise 07
+
+SELECT * FROM Aluno ORDER BY nome;
+
+--
+
+-- Exercise 08
+
+SELECT COUNT(*) FROM Curso;
+
+--
+
+-- Exercise 09
+
+SELECT COUNT(*) FROM Instrutor INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid AND Instrutor.nome = 'Leandro Siqueira';
+
+--
+
+-- Exercise 10
+
+SELECT SUM(carga_horaria) FROM Instrutor
+	INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid AND Instrutor.nome = 'Leandro Siqueira'
+	INNER JOIN Curso ON Curso.cursoid = Turma.cursoid;
+
+--
+
+-- Exercise 11
+
+SELECT Instrutor.nome, COUNT(*) AS numero_de_turmas FROM Instrutor
+	INNER JOIN Turma ON Turma.instrutorid = Instrutor.instrutorid
+	GROUP BY Instrutor.instrutorid;
+
+--
+
+-- Exercise 12
+
+SELECT Instrutor.nome, SUM(carga_horaria) AS horas_de_curso FROM Instrutor
+	INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
+	INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+	GROUP BY Instrutor.instrutorid;
+
+--
+
+-- Exercise 13
+
+SELECT EXTRACT(YEAR FROM Turma.data_termino) AS ano, Instrutor.nome AS nome_instrutor, 'R$ ' || SUM(carga_horaria) * 100.00 AS salario FROM Instrutor
+	INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
+	INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+	GROUP BY EXTRACT(YEAR FROM Turma.data_inicio), EXTRACT(YEAR FROM Turma.data_termino), Instrutor.instrutorid
+	ORDER BY EXTRACT(YEAR FROM Turma.data_termino);
+--
+
+-- Exercise 14
+
+SELECT Instrutor.nome, SUM(carga_horaria) AS horas_de_curso FROM Instrutor
+	INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
+	INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+	GROUP BY Instrutor.instrutorid
+	HAVING SUM(carga_horaria) > 850;
+
+--
+
+-- Exercise 15
+
+SELECT EXTRACT(YEAR FROM Turma.data_termino) AS ano, Curso.nome, COUNT(Turma.cursoid) AS quant_turmas FROM Curso
+	INNER JOIN Turma ON Turma.cursoid = Curso.cursoid
+	GROUP BY EXTRACT(YEAR FROM Turma.data_inicio), EXTRACT(YEAR FROM Turma.data_termino), Curso.cursoid
+	ORDER BY EXTRACT(YEAR FROM Turma.data_termino);
+
+--
+
+-- Exercise 16
+
+SELECT Aluno.nome, Curso.nome AS curso, Matricula.nota_final FROM Matricula
+	INNER JOIN Aluno ON Matricula.alunoid = Aluno.alunoid
+	INNER JOIN Turma ON Matricula.turmaid = Turma.turmaid
+	INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+	WHERE Aluno.nome = 'Rodrigo Gomes Dias';
+
+--
+
+-- Exercise 17
+
+CREATE VIEW historico_dos_alunos
+AS SELECT
+	Aluno.nome,	Aluno.cpf, Aluno.endereco,
+	Curso.nome AS curso, Curso.carga_horaria,
+	Turma.data_inicio, Turma.data_termino,
+	Instrutor.nome AS nome_instrutor,
+	Matricula.nota_final, Matricula.presenca
+	FROM Matricula
+		INNER JOIN Aluno ON Matricula.alunoid = Aluno.alunoid
+		INNER JOIN Turma ON Matricula.turmaid = Turma.turmaid
+		INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+		INNER JOIN Instrutor ON Turma.instrutorid = Instrutor.instrutorid
+		ORDER BY Aluno.nome;
+
+--
+
+-- Exercise 18
+
+INSERT INTO Turma VALUES(20, to_date('2018-02-15', 'YYYY-MM-DD'), to_date('2018-06-15', 'YYYY-MM-DD'), 10, 4);
+
+--
+
+-- Exercise 19
+
+UPDATE Instrutor SET nome = 'Diego Garcia Faria' WHERE nome = 'Diego Faria';
+
+--
+
+-- Exercise 20
+
+UPDATE Matricula
+	SET nota_final = (
+ 		CASE WHEN nota_final <= 9
+ 			THEN nota_final * 1.10
+            ELSE 10
+        END
+ 	) RETURNING *;
 
 --
