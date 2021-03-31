@@ -122,7 +122,7 @@ INSERT INTO public.Aluno VALUES(13, 61616, 'Julio Cesar Dias', 'Rua Siqueira Cam
 INSERT INTO public.Aluno VALUES(14, 51515, 'Regiane Limeira', 'Rua Sete de Setembro, num 620, Alvorada');
 INSERT INTO public.Aluno VALUES(15, 41414, 'Augusto Dias Gomes', 'Rua Nelson Davila, num 120, Centro');
 
--- OBS: A inserção do primeiro  registro resultará em um erro, pois o nome possui um tamanho maior que o definido no schema.
+-- Obs.: A inserção do primeiro  registro resultará em um erro, pois o nome possui um tamanho maior que o definido no schema.
 -- O nome possui mais do 30 caracteres, precisamos alterar a definição do schema com o comando ALTER.
 -- Após isso podemos executar as inserções acima.
 
