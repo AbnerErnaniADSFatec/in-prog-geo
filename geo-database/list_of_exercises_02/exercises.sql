@@ -412,8 +412,8 @@ DROP TABLE Instrutor;
 
 -- Exercício 28
 
-drop schema public cascade;
-create schema public;
+DROP SCHEMA public cascade;
+CREATE SCHEMA public;
 
 -- Adicionando as permissões para o esquema Public
 
@@ -466,7 +466,7 @@ CREATE TABLE public.Instrutor_Pagamento(
 -- Exercício 33
 
 INSERT INTO Instrutor_Pagamento (
-    SELECT EXTRACT(YEAR FROM Turma.data_termino) AS ano, Instrutor.instrutorid, SUM(carga_horaria * Curso.valor_hora) AS salario FROM Instrutor
+    SELECT EXTRACT(YEAR FROM Turma.data_termino) AS ano, Instrutor.instrutorid, SUM(carga_horaria * Curso.valor_hora) AS valor_pagamento FROM Instrutor
         INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
         INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
         GROUP BY EXTRACT(YEAR FROM Turma.data_inicio), EXTRACT(YEAR FROM Turma.data_termino), Instrutor.instrutorid
@@ -481,23 +481,25 @@ CREATE OR REPLACE FUNCTION atualizar_instrutor_pagamento()
     RETURNS trigger AS
         $BODY$
         BEGIN
-            DELETE FROM Instrutor_Pagamento WHERE Instrutor_Pagamento.instrutorid = NEW.instrutorid;
+            DELETE FROM Instrutor_Pagamento;
             INSERT INTO Instrutor_Pagamento (
-                SELECT EXTRACT(YEAR FROM Turma.data_termino) AS ano, Instrutor.instrutorid, SUM(carga_horaria * Curso.valor_hora) AS salario FROM Instrutor
-                    INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
-                    INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
-                    WHERE Instrutor.instrutorid = NEW.instrutorid
-                    GROUP BY EXTRACT(YEAR FROM Turma.data_inicio), EXTRACT(YEAR FROM Turma.data_termino), Instrutor.instrutorid
-                    ORDER BY EXTRACT(YEAR FROM Turma.data_termino)
+                SELECT
+                    EXTRACT(YEAR FROM Turma.data_termino) AS ano,
+                    Instrutor.instrutorid,
+                    SUM(carga_horaria * Curso.valor_hora) AS valor_pagamento FROM Instrutor
+                        INNER JOIN Turma ON Instrutor.instrutorid = Turma.instrutorid
+                        INNER JOIN Curso ON Curso.cursoid = Turma.cursoid
+                        GROUP BY EXTRACT(YEAR FROM Turma.data_inicio), EXTRACT(YEAR FROM Turma.data_termino), Instrutor.instrutorid
+                        ORDER BY EXTRACT(YEAR FROM Turma.data_termino)
             );
-        RETURN NEW;
+            RETURN NEW;
         END;
         $BODY$
     LANGUAGE plpgsql;
 
 CREATE TRIGGER update_instrutor_pagamento
-    AFTER INSERT OR UPDATE ON Turma
-    FOR EACH ROW EXECUTE PROCEDURE atualizar_instrutor_pagamento(NEW);
+    AFTER INSERT OR UPDATE OR DELETE ON Turma
+    FOR EACH ROW EXECUTE PROCEDURE atualizar_instrutor_pagamento();
 
 --
 
