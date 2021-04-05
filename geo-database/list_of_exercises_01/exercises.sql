@@ -47,4 +47,3 @@ INSERT INTO public.professor VALUES(2,11111111112,'Dr. Otto Octavius','otto@gmai
 INSERT INTO public.professor VALUES(4,11111111114,'Dr. Trevor Bruttenholm','professor.broom@gmail.com','+55 (12) 99912-4444', 'Rua Nelson Davila, num 120, Centro');
 
 SELECT * FROM public.professor;
-
