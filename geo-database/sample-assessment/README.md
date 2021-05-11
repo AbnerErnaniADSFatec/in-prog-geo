@@ -1,8 +1,8 @@
 # Sample Assessment App
 
-[![Docker](https://img.shields.io/badge/docker-latest-green)](https://www.docker.com/)
+[![Docker](https://img.shields.io/badge/Docker-latest-green)](https://www.docker.com/)
 [![Docker SITS](https://img.shields.io/badge/BDC_Sits_RStudio-1.4.1103-green)](https://hub.docker.com/r/brazildatacube/sits-rstudio)
-[![Shiny for R](https://img.shields.io/badge/shiny-latest-green)](https://shiny.rstudio.com/)
+[![Shiny for R](https://img.shields.io/badge/Shiny-latest-green)](https://shiny.rstudio.com/)
 
 Esta interface web será apresentada como uma plataforma onde os usuários poderão fazer o upload dos dados com base em diferentes formatos de arquivos ou utilizando serviços para postagem de mapas como o Geoserver.
 
