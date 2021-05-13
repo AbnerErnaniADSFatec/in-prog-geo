@@ -14,7 +14,7 @@ WITH trechos_length AS (
 	INNER JOIN uf ON uf.nome = 'TOCANTINS'
 	WHERE ST_Contains(uf.geom, trechos.geom) AND ST_Intersects(uf.geom, trechos.geom)
 	AND trechos.revestimen = 'Pavimentado'
-) SELECT SUM(length_) || ' km' AS Km_trechos_tocantins FROM trechos_length;
+) SELECT 111*SUM(length_) || ' km' AS Km_trechos_tocantins FROM trechos_length;
 
 -- Utilizando conversões
 
