@@ -5,13 +5,13 @@
 import random
 
 import stac
+from _datetime import date
 from eocube_server import config
-
-from flask import Flask, request, abort
+from flask import Flask, abort, request
+from flask.json import JSONEncoder
 from flask_cors import CORS, cross_origin
 from flask_jsonpify import *
-from flask.json import JSONEncoder
-from _datetime import date
+
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):

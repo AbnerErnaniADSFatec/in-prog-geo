@@ -3,9 +3,11 @@
 """
 
 import requests
-import wtss
 import stac
+import wtss
+
 from eocube import config
+
 
 def _response(url):
     return requests.get(url).json()

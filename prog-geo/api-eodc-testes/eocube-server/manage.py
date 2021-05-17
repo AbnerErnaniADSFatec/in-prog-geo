@@ -3,8 +3,10 @@
 """
 
 import os
+
 import click
 from eocube_server.app import app
+
 
 @click.command()
 @click.option('--run_port', default=5000, help='Port number.')
