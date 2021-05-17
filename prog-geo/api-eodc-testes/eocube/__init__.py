@@ -2,4 +2,5 @@
 4. API - EO Data Cube.
 """
 
-from .eocube import EOCube
+from .eocube import *
+from .config import *

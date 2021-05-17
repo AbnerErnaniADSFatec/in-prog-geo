@@ -37,6 +37,7 @@ install_requires = [
     'matplotlib>=3.3.3',
     'pandas>=1.1',
     'requests>=2',
+    'rasterio>=1.2.3',
     'stac.py>=0.9',
     'wtss>=0.7'
 ]

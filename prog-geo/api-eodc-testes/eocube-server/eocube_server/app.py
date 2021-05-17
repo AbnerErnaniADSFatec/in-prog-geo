@@ -4,10 +4,14 @@
 
 import random
 
+import stac
+from eocube_server import config
+
 from flask import Flask, request, abort
 from flask_cors import CORS, cross_origin
 from flask_jsonpify import *
 from flask.json import JSONEncoder
+from _datetime import date
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -38,3 +42,21 @@ def hello(number):
         'text':'Hello World!!!',
         'random_numbers':aux
     })
+
+@app.route("/collections", methods=['GET'])
+def get_collections():
+    config.ACCESS_TOKEN = request.args.get('token')
+    try:
+        service = stac.STAC(
+            config.STAC_URL,
+            access_token=config.ACCESS_TOKEN
+        )
+        return jsonify({
+            'collections': list(service.collections.keys())
+        })
+    except:
+        return jsonify({
+            'code': '403',
+            'message': 'Access error, forbidden!'
+        })
+

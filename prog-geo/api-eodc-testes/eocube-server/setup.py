@@ -42,6 +42,7 @@ install_requires = [
     'numpy>=1.19',
     'matplotlib>=3.3.3',
     'pandas>=1.1',
+    'rasterio>=1.2.3',
     'stac.py>=0.9',
     'wtss>=0.7'
 ]
