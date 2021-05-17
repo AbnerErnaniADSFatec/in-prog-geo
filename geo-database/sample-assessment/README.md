@@ -45,7 +45,7 @@ docker run --rm -it --name sample-assessment \
     brazildatacube/sits-rstudio:1.4.1103
 ~~~
 
-O comando abaixo também criará um container com as dependências do `sits` porém o container será executado em segundo plano:
+O comando abaixo também criará um container com as dependências do `sits`, porém o container será executado em segundo plano:
 
 ~~~dos
 docker  run -d --name sample-assessment \
@@ -58,6 +58,12 @@ Para executar comandos como super usuário neste container é necessário execut
 
 ~~~dos
 docker exec -it sample-assessment bash
+~~~
+
+Instalar as dependências necessárias para a avaliação de amostras utilizando o `sits`:
+
+~~~dos
+sample-assessment # cp -u -R /home/sits/sample-assessment/data/sits-bundle/* /usr/local/lib/R/site-library/
 ~~~
 
 Para excluir as dependências do container docker:

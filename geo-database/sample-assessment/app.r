@@ -1,33 +1,72 @@
 library(shiny)
-library(ggplot2)
+library(sits)
 library(dplyr)
-
-modis <- read.csv("./data/MOD13Q1-1.2019.11.01.csv", stringsAsFactors = FALSE, sep = ";")
+library(ggplot2)
+library(sf)
 
 ui <- fluidPage(
-  titlePanel("MOD13Q1-1 2019 11 01 data"),
+  titlePanel("Quality control samples - Assess Quality"),
   sidebarLayout(
     sidebarPanel(
-      sliderInput("search_input", "Search", -10000, 10000, c(-10000,10000), pre = "Value "),
-      radioButtons(
-        "typeInput",
-        "Select bands",
-        choices = c("ndvi", "evi", "nir", "red"),
-        selected = "ndvi"
-      )
+      fileInput("tb_file", "Choose Tibble File", accept = ".rds"),
+      selectInput("select", "Select band", choices = list("NDVI"= 'NDVI'), selected = 1),
+      hr(),
+      fluidRow(column(10, verbatimTextOutput("render_tb"))),
+      hr(),
+      fluidRow(column(10, verbatimTextOutput("bands"))),
     ),
     mainPanel(
-      plotOutput("coolplot"),
+      plotOutput("ts_plot"),
       br(), br(),
-      tableOutput("results")
+      plotOutput("som_plot"),
     )
   )
 )
 
+input_data.tb
+
 server <- function(input, output) {
-  output$coolplot <- renderPlot({
-      ggplot(modis, aes(x=timeline, y=ndvi, group=1)) + geom_line() + geom_point()
-    })
+  output$value <- renderPrint({ input$select })
+  output$bands <- renderPrint({
+    file <- input$tb_file
+    ext <- tools::file_ext(file$datapath)
+    req(file)
+    validate(need(ext == "rds", "Please upload a RDS file..."))
+    input_data.tb <- readRDS(file$datapath)
+    sits_bands(input_data.tb)
+  })
+  output$render_tb <- renderPrint({
+    file <- input$tb_file
+    ext <- tools::file_ext(file$datapath)
+    req(file)
+    validate(need(ext == "rds", "Please upload a RDS file..."))
+    readRDS(file$datapath)
+  })
+  output$ts_plot <- renderPlot({
+    file <- input$tb_file
+    ext <- tools::file_ext(file$datapath)
+    req(file)
+    validate(need(ext == "rds", "Please upload a RDS file..."))
+    input_data.tb <- readRDS(file$datapath)
+    plot(sits_select(input_data.tb, bands = input$select))
+  })
+  output$som_plot <- renderPlot({
+    file <- input$tb_file
+    ext <- tools::file_ext(file$datapath)
+    req(file)
+    validate(need(ext == "rds", "Please upload a RDS file..."))
+    set.seed(777)
+    clustering_CB4_workshop.lst <- sits::sits_som_map(
+      input_data.tb,
+      grid_xdim = 9,
+      grid_ydim = 9,
+      alpha = c(0.5, 0.01),
+      distance = "euclidean",
+      rlen = 100,
+      som_radius = 1
+    )
+    plot(clustering_CB4_workshop.lst, type = "codes", whatmap = 5)
+  })
 }
 
 shinyApp(ui = ui, server = server)
