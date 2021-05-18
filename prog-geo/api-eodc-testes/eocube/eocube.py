@@ -29,7 +29,7 @@ class Cube():
     def _ndbi(self):
         return 0
 
-class EOCube():
+class DataCube():
 
     def __init__(self):
         if len(config.ACCESS_TOKEN) == 0:
@@ -40,7 +40,7 @@ class EOCube():
     def getRandomNumbers(self, number=10):
         return _response(
             config.EOCUBE_URL + f"/{str(number)}"
-        )
+        )["random_numbers"]
 
     def getCollections(self):
         response = _response(
