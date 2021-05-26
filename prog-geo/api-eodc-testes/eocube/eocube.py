@@ -62,7 +62,7 @@ def _response(url, json_obj=False, obj=None):
         return requests.get(url).json()
 
 def _normalize(array):
-    """Normalizes numpy arrays into scale 0.0 - 1.0.
+    """Normalize numpy arrays into scale 0.0 - 1.0.
 
     ## Parameters
 
@@ -193,9 +193,8 @@ class Image():
         ndwi = (green - nir) / (green + nir + cte_delta)
         return ndwi
 
-    # Função para cálculo do índice NDBI
     def _ndbi(self, nir, swir1, cte_delta=1e-10):
-        """Calculate the Normalized Difference Water Index - NDWI.
+        """Calculate the Normalized Difference Built-up Index - NDBI.
 
         ## Parameters
 
@@ -203,9 +202,9 @@ class Image():
 
             A multidimensional nparray with next infrared values.
 
-        ### green : np.arrary, required
+        ### swir1 : np.arrary, required
 
-            A multidimensional nparray with band green values.
+            A multidimensional nparray with band swir1 values.
 
         ### cte_delta : float, optional
 
@@ -217,28 +216,61 @@ class Image():
 
             If the resquested nparray is invalid or not typed.
         """
+        # Função para cálculo do índice NDBI
         ndbi = (swir1 - nir) / (swir1 + nir + cte_delta)
         return ndbi
 
     def getNDVI(self):
+        """Calculate the Normalized Difference Vegetation Index - NDVI by image colected values.
+
+        ## Raise
+
+        ### KeyError
+
+            If the required band does not exist.
+        """
         return self._ndvi(
             nir=self.getBand("nir"),
             red=self.getBand("red")
         )
 
     def getNDWI(self):
+        """Calculate the Normalized Difference Water Index - NDWI by image colected values.
+
+        ## Raise
+
+        ### KeyError
+
+            If the required band does not exist.
+        """
         self._ndwi(
             nir=self.getBand("nir"),
             green=self.getBand("green")
         )
 
     def getNDBI(self):
+        """Calculate the Normalized Difference Built-up Index - NDBI by image colected values.
+
+        ## Raise
+
+        ### KeyError
+
+            If the required band does not exist.
+        """
         self._ndbi(
             nir=self.getBand("nir"),
             swir1=self.getBand("swir1")
         )
 
     def getRGB(self):
+        """Get thee RGB image with real color.
+
+        ## Raise
+
+        ### KeyError
+
+            If the required band does not exist.
+        """
         red = self.getBand("red", wd=Window(0, 0, 500, 500))
         green = self.getBand("green", wd=Window(0, 0, 500, 500))
         blue = self.getBand("blue", wd=Window(0, 0, 500, 500))
@@ -251,8 +283,16 @@ class Image():
         )
 
 class DataCube():
+    """Abstraction to create earth observation data cubes using images collected by STAC.py.
+
+    ## Methods
+
+    getCollections(), getDescription(),
+    getItems(), createCube(), getCube()
+    """
 
     def __init__(self):
+        """Build DataCube object with config parameters including access token, STAC url and earth observation service url."""
         if len(config.ACCESS_TOKEN) == 0:
             config.ACCESS_TOKEN = input("Please insert a valid user token from BDC Auth: ")
         if len(config.EOCUBE_URL) == 0:
@@ -268,21 +308,32 @@ class DataCube():
         self.images = []
 
     def getCollections(self):
+        """Return a list with available collections from STAC."""
         try:
             # response = _response(config.EOCUBE_URL + "/collections")
             # collections = response['collections']
             # return collections
             return list(self.stac_service.collections.keys())
         except:
-            return []
+            return None
 
-    def getDescription(self, collection_name=""):
+    def getDescription(self, collection_name):
+        """Return a description JSON by collection name from STAC.
+
+        ## Parameters
+
+        ### collection_name : string, required
+
+            The collection name available on getCollections() list.
+        """
         try:
             # response = _response(
             #     config.EOCUBE_URL +
             #     f"/describe/{collection_name}?token={config.ACCESS_TOKEN}"
             # )
             response = self.stac_service.collections[collection_name]
+            # Retorna uma resposta personalizada do STAC
+            # Necessita da biblioteca instalada
             return {
                 "id": response["id"],
                 "title": response["title"],
@@ -295,7 +346,29 @@ class DataCube():
 
     def getItems(self, collections=[], bbox=(),
         start_date=None, end_date=None, limit=30):
+        """Get items by STAC url service.
+
+        ## Parameters
+
+        ### collections : string list, required
+
+            The list with name of collections selected by user.
+
+        ### bbox : tupple, required
+
+            The bounding box with user Area of Interest.
+
+        ### start_date : string, required
+
+            The string start date formated "yyyy-mm-dd" to complete the interval.
+
+        ### end_date : string, required
+
+            The string end date formated "yyyy-mm-dd" to complete the interval.
+        """
         try:
+            # arazenar a query globalmente para utilizar os parametros de bounding box
+            # e data inicial e final
             self.query = {
                 'collections': collections,
                 'bbox': bbox,
@@ -317,16 +390,21 @@ class DataCube():
             # )["result"]
             # return self.items
             self.items = self.stac_service.search(self.query)
+            # Retornando apenas as fetures para coletar as imagens
             return self.items.features
         except:
             return None
 
-    ## Só é possível com a biblioteca STAC.py
+
     def createCube(self):
+        """Create a data cube using images collected from STAC using Image abstration."""
+        ## Só é possível com a biblioteca STAC.py
         if self.items:
+            # Cria uma lista de objetos Images com os items no STAC
             for item in self.items.features:
                 bands = {}
                 for band in item.get('properties').get('eo:bands'):
+                    # Cria um dicionário com cada chave sendo o nome comum da banda e o nome dado pelo item
                     bands[str(band.get('common_name'))] = band.get('name')
                 self.images.append(
                     Image(
@@ -335,10 +413,12 @@ class DataCube():
                         bbox=self.query['bbox']
                     )
                 )
+        # Verifica se o cubo de dados foi criado com sucesso
         if len(self.images) != 0:
             return True
         else:
             return False
 
     def getCube(self):
+        """Get the data cube created by createCube() method."""
         return self.images

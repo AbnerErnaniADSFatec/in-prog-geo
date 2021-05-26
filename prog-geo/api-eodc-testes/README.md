@@ -39,7 +39,17 @@ Instalar as depêndencias para cada exemplo:
  - [EO Cube Server](./eocube-server);
  - [EO Cube](./eocube).
 
+## Documentação e Testes
+
+Construção da documentação e execução dos testes unitários para a API e o pacote EOCube `./help/build/index.html`.
+
+~~~shell
+(eocube) $ sudo chmod +x ./build.sh && ./build.sh
+~~~
+
 ## Execução
+
+Execução do pacote no ambiente Jupyter no Python.
 
 ~~~shell
 (eocube) $ jupyter-notebook

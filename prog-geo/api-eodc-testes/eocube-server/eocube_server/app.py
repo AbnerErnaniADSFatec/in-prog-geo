@@ -1,5 +1,19 @@
 """
-4. API - EO Data Cube.
+API - EO Data Cube.
+
+Python Client Library for Earth Observation Data Cubes.
+This abstraction uses STAC.py library provided by BDC Project.
+
+=======================================
+begin                : 2021-05-01
+git sha              : $Format:%H$
+copyright            : (C) 2020 by none
+email                : none@inpe.br
+=======================================
+
+This program is free software.
+You can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 """
 
 import random
@@ -14,6 +28,7 @@ from flask_jsonpify import *
 
 
 class CustomJSONEncoder(JSONEncoder):
+    """Custom JSON Encoder for validate the API response."""
     def default(self, obj):
         try:
             if isinstance(obj, date):
@@ -25,12 +40,30 @@ class CustomJSONEncoder(JSONEncoder):
             return list(iterable)
         return JSONEncoder.default(self, obj)
 
+# Criando o app com a biblioteca Flask
+# com este app é possível definir as rotas e as
+# regras de CROSS ORIGIN
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
 CORS(app)
 
+# App.route define as rotas e os métodos permitidos
 @app.route("/eocube/collections", methods=['GET'])
 def collections():
+    """Get a list with available collections from STAC.
+
+    ## Parameters
+
+    ### token : string, optional
+
+        The BDC user token.
+
+    ## Raise
+
+    ### HTTPError
+
+        If the STAC server is out of service.
+    """
     token = request.args.get('token')
     try:
         service = stac.STAC(
@@ -48,6 +81,24 @@ def collections():
 
 @app.route("/eocube/describe/<collection_name>", methods=['GET'])
 def describe(collection_name):
+    """Get a description with available collection name from STAC.
+
+    ## Parameters
+
+    ### collection_name : string, required
+
+        The collection name from list collections.
+
+    ### token : string, required
+
+        The BDC user token.
+
+    ## Raise
+
+    ### HTTPError
+
+        If the STAC server is out of service.
+    """
     token = request.args.get('token')
     try:
         service = stac.STAC(
@@ -63,14 +114,30 @@ def describe(collection_name):
 
 @app.route("/eocube/search", methods=['POST'])
 def search():
-    """
-    dados de testes:
-    {
-        "collections": ["CB4_64_16D_STK-1"],
-        "bbox": [-46.01348876953125, -23.08478515994374, -45.703125, -23.34856015148709],
-        "interval": ["2018-08-01","2019-07-31"],
-        "limit": 10
-    }
+    """Get a description with available collection name from STAC.
+
+    ## Parameters
+
+    ### token : string, required
+
+        The BDC user token.
+
+    ## JSON Object
+
+    ### Test data for POST:
+
+        {
+            "collections": ["CB4_64_16D_STK-1"],
+            "bbox": [-46.01348876953125, -23.08478515994374, -45.703125, -23.34856015148709],
+            "interval": ["2018-08-01","2019-07-31"],
+            "limit": 10
+        }
+
+    ## Raise
+
+    ### HTTPError
+
+        If the STAC server is out of service.
     """
     token = request.args.get('token')
     if request.method == 'POST':
