@@ -13,7 +13,7 @@ __version__ = '0.1'
 # -- Project information -----------------------------------------------------
 
 project = '4. API EOCube'
-copyright = '2021, None.'
+copyright = '2021, None'
 author = '4 Team in Prog Geo PG CAP'
 
 # The full version, including alpha/beta/rc tags.
