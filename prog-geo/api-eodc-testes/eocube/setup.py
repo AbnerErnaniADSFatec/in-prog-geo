@@ -52,6 +52,7 @@ install_requires = [
     'pandas>=1.1',
     'requests>=2',
     'rasterio>=1.2.3',
+    'xarray>=0.18.2',
     'stac.py>=0.9',
     'wtss>=0.7'
 ]

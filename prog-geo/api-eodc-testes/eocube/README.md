@@ -13,6 +13,12 @@ Atualizar o pacote `pip` e o `setuptools` para a instalação:
 (eocube) ~/eocube-server $ python -m pip install --upgrade pip setuptools
 ~~~
 
+Realizar a instalação do pacote `GDAL` para a manipulação de imagens:
+
+~~~shell
+(eocube) ~/eocube-server $ conda install GDAL
+~~~
+
 Instalar as depências utilizando o arquivo [`setup.py`](./setup.py):
 
 ~~~shell
