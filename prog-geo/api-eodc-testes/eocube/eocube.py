@@ -18,15 +18,20 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 
 import datetime
 import json
+import warnings
 
 import numpy as np
+import rasterio
 import requests
 import stac
 import wtss
+import xarray as xr
+from pyproj import CRS, Proj, transform
 from rasterio.windows import Window
 
 from eocube import config
 
+warnings.filterwarnings("ignore")
 
 def _response(url, json_obj=False, obj=None):
     """Get response JSON from url using object.
@@ -101,8 +106,10 @@ class Image():
 
     ## Methods
 
-    getBand(), _ndvi(), _ndwi(), _ndbi(),
-    getNDVI(), getNDWI(), getNDBI()
+    listBands(), getBand(),
+    _ndvi(), _ndwi(), _ndbi(),
+    getNDVI(), getNDWI(), getNDBI(), getRGB(),
+    _afim()
     """
 
     def __init__(self, item, bands, bbox):
@@ -111,7 +118,11 @@ class Image():
         self.bands = bands
         self.bbox = bbox
 
-    def getBand(self, band, wd=None):
+    def listBands(self):
+        """Get a list with available bands commom name."""
+        return list(self.bands.keys())
+
+    def getBand(self, band, bbox=None, wd=None):
         """Get bands from STAC item using commom name for band.
 
         ## Parameters
@@ -130,13 +141,19 @@ class Image():
 
             If the resquested key not exists.
         """
-        if wd:
+
+        if bbox:
+            return self.item.read(
+                self.bands[band], bbox=bbox
+            )
+        elif wd:
             return self.item.read(
                 self.bands[band], window=wd
             )
         else:
+            wd = Window(0, 0, 500, 500)
             return self.item.read(
-                self.bands[band], bbox=self.bbox
+                self.bands[band], window=wd
             )
 
     def _ndvi(self, nir, red, cte_delta=1e-10):
@@ -271,16 +288,52 @@ class Image():
 
             If the required band does not exist.
         """
-        red = self.getBand("red", wd=Window(0, 0, 500, 500))
-        green = self.getBand("green", wd=Window(0, 0, 500, 500))
-        blue = self.getBand("blue", wd=Window(0, 0, 500, 500))
-        return np.dstack(
-            (
-                _normalize(red),
-                _normalize(green),
-                _normalize(blue)
+        red = self.getBand("red")
+        green = self.getBand("green")
+        blue = self.getBand("blue")
+        linhas = blue.shape[0]
+        colunas = blue.shape[1]
+        array_rgb = np.zeros((linhas, colunas, 3))
+        array_rgb[:, :, 0] = red / red.max()
+        array_rgb[:, :, 1] = green / green.max()
+        array_rgb[:, :, 2] = blue / blue.max()
+        return array_rgb
+
+    def _afim(self, x, y, band):
+        """Calculate the long lat of a given point from band matrix.
+
+        ## Parameters
+
+        ### x : int, required
+
+            For colunms.
+
+        ### y : int, required
+
+            For lines.
+
+        ### band : string, required
+
+            An available band to create a dataset.
+
+        ## Raise
+
+        ### ValueError
+
+            If the resquested coordinate is invalid or not typed.
+
+        """
+        link = self.item.assets[
+            self.bands[band]
+        ]['href']
+        with rasterio.open(link) as dataset:
+            coord = dataset.transform * (y, x)
+            lon, lat = transform(
+                dataset.crs.wkt,
+                Proj(init=CRS.from_string("EPSG:4326")),
+                coord[0], coord[1]
             )
-        )
+        return (lon, lat)
 
 class DataCube():
     """Abstraction to create earth observation data cubes using images collected by STAC.py.
@@ -288,7 +341,7 @@ class DataCube():
     ## Methods
 
     getCollections(), getDescription(),
-    getItems(), createCube(), getCube()
+    getItems(), createCube(), getCubeByBand(), getCube()
     """
 
     def __init__(self):
@@ -418,6 +471,32 @@ class DataCube():
             return True
         else:
             return False
+
+    def getCubeByBand(self, band):
+        """Create a dataset with a given band in time.
+
+        ## Parameters
+
+        ### band : string, required
+
+            An available band to create a dataset.
+        """
+        # loc["2000-01-01":"2000-01-02", "IA"]
+        x_data = []
+        time = []
+        for image in self.getCube():
+            date = datetime.datetime.strptime(
+                image.item["properties"]["datetime"],
+                '%Y-%m-%dT%H:%M:%S'
+            )
+            data = image.getBand(band)
+            x_data.append(data)
+            time.append(date)
+        return xr.DataArray(
+            np.array(x_data),
+            coords=[time],
+            dims=["time"]
+        )
 
     def getCube(self):
         """Get the data cube created by createCube() method."""
