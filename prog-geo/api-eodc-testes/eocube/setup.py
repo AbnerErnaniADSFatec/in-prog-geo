@@ -60,7 +60,7 @@ install_requires = [
 packages = find_packages()
 
 g = {}
-with open('version.py', 'rt') as fp:
+with open(os.path.join('eocube', 'version.py'), 'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
@@ -68,7 +68,7 @@ setup(
     name='eocube',
     version=version,
     description=__doc__,
-    long_description="4. API - EO Data Cube",
+    long_description="Python Client Library for Earth Observation Data Cubes",
     long_description_content_type = 'text/x-rst',
     keywords=['Earth Observation Data Cube', 'GIS', 'QGIS'],
     license='MIT',
