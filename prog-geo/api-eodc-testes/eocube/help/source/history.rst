@@ -10,4 +10,7 @@
 History
 =======
 
-Under development...
+Version 0.1 (2021-06-07)
+--------------------------
+
+- Support for ` Github <https://github.com/prog-geo/eocubes>`_.

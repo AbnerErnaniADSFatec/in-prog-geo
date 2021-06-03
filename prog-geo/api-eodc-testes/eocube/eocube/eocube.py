@@ -29,55 +29,47 @@ import xarray as xr
 from pyproj import CRS, Proj, transform
 from rasterio.windows import Window
 
+from eocube import config
+
 from .image import Image
 from .utils import Utils
-
-from eocube import config
 
 warnings.filterwarnings("ignore")
 
 class DataCube():
     """Abstraction to create earth observation data cubes using images collected by STAC.py.
+    Create a data cube using images collected from STAC using Image abstration.
 
-    ## Methods
+    ## Parameters
 
-    getCollections(), getDescription(),
-    getItems(), createCube(), getCubeByBand(), getCube()
+    ### collections : string list, required
+
+        The list with name of collections selected by user.
+
+    ### query_bands : string list, required
+
+        The list with commom name of bands [].
+
+    ### bbox : tupple, required
+
+        The bounding box with user Area of Interest.
+
+    ### start_date : string, required
+
+        The string start date formated "yyyy-mm-dd" to complete the interval.
+
+    ### end_date : string, required
+
+        The string end date formated "yyyy-mm-dd" to complete the interval.
+
+    ### limit : int, required
+
+        The limit of response images.
     """
 
     def __init__(self, collections=[], query_bands=[], bbox=(), start_date=None, end_date=None, limit=30):
-        """Get items by STAC url service.
+        """Build DataCube object with config parameters including access token, STAC url and earth observation service url."""
 
-        Create a data cube using images collected from STAC using Image abstration.
-
-        Build DataCube object with config parameters including access token, STAC url and earth observation service url.
-
-        ## Parameters
-
-        ### collections : string list, required
-
-            The list with name of collections selected by user.
-
-        ### query_bands : string list, required
-
-            The list with commom name of bands [].
-
-        ### bbox : tupple, required
-
-            The bounding box with user Area of Interest.
-
-        ### start_date : string, required
-
-            The string start date formated "yyyy-mm-dd" to complete the interval.
-
-        ### end_date : string, required
-
-            The string end date formated "yyyy-mm-dd" to complete the interval.
-
-        ### limit : int, required
-
-            The limit of response images.
-        """
         if len(config.ACCESS_TOKEN) == 0:
             config.ACCESS_TOKEN = input("Please insert a valid user token from BDC Auth: ")
 
@@ -182,23 +174,23 @@ class DataCube():
         timeline = sorted(list(x_data.keys()))
         data_timeline = {}
 
-        for i in range(len(list(bands))):
-            data_timeline[bands[i]] = []
+        for i in range(len(list(self.query_bands))):
+            data_timeline[self.query_bands[i]] = []
             for time in timeline:
-                data_timeline[bands[i]].append(
-                    x_data[time][i][bands[i]]
+                data_timeline[self.query_bands[i]].append(
+                    x_data[time][i][self.query_bands[i]]
                 )
 
         time_series = []
-        for band in bands:
+        for band in self.query_bands:
             time_series.append(
                 data_timeline[band]
             )
 
         self.data_array = xr.DataArray(
             np.array(time_series),
-            coords=[bands, timeline, longitude, latitude],
-            dims=["band", "time", "laitude", "latitude"]
+            coords=[self.query_bands, timeline, latitude, longitude],
+            dims=["band", "time", "latitude", "longitude"]
         )
 
         self.data_array.attrs = self.getDescription()

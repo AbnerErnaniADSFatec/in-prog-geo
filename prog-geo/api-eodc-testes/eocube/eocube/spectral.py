@@ -17,6 +17,9 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 """
 
 
+import numpy as np
+
+
 class Spectral():
 
     def _normalize(self, array):

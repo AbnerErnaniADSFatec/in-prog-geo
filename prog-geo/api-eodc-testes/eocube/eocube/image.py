@@ -17,8 +17,9 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 """
 
 
-from .utils import Utils
 from .spectral import Spectral
+from .utils import Utils
+
 
 class Image():
     """Abstraction to rasters files collected by STAC.py.
@@ -38,13 +39,6 @@ class Image():
     ### bbox : tupple, required
 
         The bounding box value with longitude and latitude values.
-
-    ## Methods
-
-    listBands(), getBand(),
-    _ndvi(), _ndwi(), _ndbi(),
-    getNDVI(), getNDWI(), getNDBI(), getRGB(),
-    _afim()
     """
 
     def __init__(self, item, bands, bbox):
@@ -59,7 +53,7 @@ class Image():
         """Get a list with available bands commom name."""
         return list(self.bands.keys())
 
-    def getBand(self, band, bbox=None):
+    def getBand(self, band):
         """Get bands from STAC item using commom name for band.
 
         ## Parameters
@@ -79,7 +73,7 @@ class Image():
             If the resquested key not exists.
         """
         return self.item.read(
-            self.bands[band], bbox=bbox
+            self.bands[band], bbox=self.bbox
         )
 
     def getNDVI(self):
@@ -136,10 +130,10 @@ class Image():
         return self.spectral._rgb(
             red=self.getBand("red"),
             green=self.getBand("green"),
-            blue=elf.getBand("blue")
+            blue=self.getBand("blue")
         )
 
-    def _afim(self, x, y, band):
+    def _afimPointsToCoord(self, x, y, band):
         """Calculate the long lat of a given point from band matrix.
 
         ## Parameters
@@ -166,4 +160,32 @@ class Image():
         link = self.item.assets[
             self.bands[band]
         ]['href']
-        return self.utils._afim(link, x, y)
+        return self.utils._afimPointsToCoord(link, x, y)
+
+    def _afimCoordsToPoint(self, lon, lat, band):
+        """Calculate the point of a given long lat from band matrix.
+
+        ## Parameters
+
+        ### raster_file : string, required
+
+            The raster file path
+
+        ### lon : float, required
+
+            For colunms.
+
+        ### lat : float, required
+
+            For lines.
+
+        ## Raise
+
+        ### ValueError
+
+            If the resquested coordinate is invalid or not typed.
+        """
+        link = self.item.assets[
+            self.bands[band]
+        ]['href']
+        return self.utils._afimCoordsToPoint(link, lon, lat)

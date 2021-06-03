@@ -21,6 +21,7 @@ import rasterio
 import requests
 from pyproj import CRS, Proj, transform
 
+
 class Utils():
 
     def _response(self, url, json_obj=False, obj=None):
@@ -88,10 +89,14 @@ class Utils():
 
         return True
 
-    def _afim(self, raster_file, x, y):
+    def _afimPointsToCoord(self, raster_file, x, y):
         """Calculate the long lat of a given point from band matrix.
 
         ## Parameters
+
+        ### raster_file : string, required
+
+            The raster file path
 
         ### x : int, required
 
@@ -115,3 +120,35 @@ class Utils():
                 coord[0], coord[1]
             )
         return (lon, lat)
+
+    def _afimCoordsToPoint(self, raster_file, lon, lat):
+        """Calculate the point of a given long lat from band matrix.
+
+        ## Parameters
+
+        ### raster_file : string, required
+
+            The raster file path
+
+        ### lon : float, required
+
+            For colunms.
+
+        ### lat : float, required
+
+            For lines.
+
+        ## Raise
+
+        ### ValueError
+
+            If the resquested coordinate is invalid or not typed.
+        """
+        with rasterio.open(raster_file) as dataset:
+            coord = transform(
+                Proj(init=CRS.from_string("EPSG:4326")),
+                dataset.crs.wkt,
+                lon, lat
+            )
+            x, y = rasterio.transform.rowcol(dataset.transform, coord[0], coord[1])
+        return (x, y)

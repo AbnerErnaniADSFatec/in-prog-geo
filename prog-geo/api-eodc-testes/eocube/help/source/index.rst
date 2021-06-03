@@ -6,11 +6,8 @@
     You can redistribute it and/or modify it under the terms of the MIT License;
     See LICENSE file for more details.
 
-=====
-About
-=====
-
-Under development...
+.. include:: ../../README.rst
+   :end-before: About
 
 .. toctree::
     :hidden:

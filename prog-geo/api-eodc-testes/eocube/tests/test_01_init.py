@@ -21,7 +21,6 @@ import os
 import unittest
 
 
-
 class TestInit(unittest.TestCase):
     """Tests Python Client Library for Earth Observation Data Cube."""
 
