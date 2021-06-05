@@ -160,7 +160,10 @@ class Image():
         link = self.item.assets[
             self.bands[band]
         ]['href']
-        return self.utils._afimPointsToCoord(link, x, y)
+        point0 = self.utils._afimCoordsToPoint(link, self.bbox[0], self.bbox[1])
+        pointX = (point0[0] + x, point0[1] + y)
+        coordX = self.utils._afimPointsToCoord(link, pointX[0], pointX[1])
+        return coordX
 
     def _afimCoordsToPoint(self, lon, lat, band):
         """Calculate the point of a given long lat from band matrix.
@@ -188,4 +191,11 @@ class Image():
         link = self.item.assets[
             self.bands[band]
         ]['href']
-        return self.utils._afimCoordsToPoint(link, lon, lat)
+        coord0 = self._afimPointsToCoord(0, 0, band)
+        point0 = self.utils._afimCoordsToPoint(link, coord0[0], coord0[1])
+        pointX = self.utils._afimCoordsToPoint(link, lon, lat)
+        result = (
+            abs(point0[0] - pointX[0]),
+            abs(point0[1] - pointX[1])
+        )
+        return result

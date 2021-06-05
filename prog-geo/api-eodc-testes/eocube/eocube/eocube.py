@@ -36,7 +36,8 @@ from .utils import Utils
 
 warnings.filterwarnings("ignore")
 
-class DataCube():
+
+class EOCube():
     """Abstraction to create earth observation data cubes using images collected by STAC.py.
     Create a data cube using images collected from STAC using Image abstration.
 
@@ -81,7 +82,7 @@ class DataCube():
 
         self.utils = Utils()
 
-        self.stac_service = stac.STAC(
+        self.stac_client = stac.STAC(
             config.STAC_URL,
             access_token=config.ACCESS_TOKEN
         )
@@ -94,7 +95,7 @@ class DataCube():
         if not query_bands:
             raise AttributeError("Please insert a list of available bands with query_bands!")
         else:
-            self.query_bands = query_bands
+            self.query_bands = [band.lower() for band in query_bands]
 
         if not bbox:
             raise AttributeError("Please insert a bounding box parameter!")
@@ -107,7 +108,7 @@ class DataCube():
             _start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             _end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
             if _end_date <= _start_date:
-                raise ValueError("Start date is greatter than end date!")
+                raise ValueError("Start date is greater than end date!")
             else:
                 self.start_date = start_date
                 self.end_date = end_date
@@ -122,12 +123,12 @@ class DataCube():
             # arazenar a query globalmente para utilizar os parametros de bounding box
             # e data inicial e final
             self.query = {
-                'collections': collections,
-                'bbox': bbox,
-                'datetime': f'{start_date}/{end_date}',
+                'collections': self.collections,
+                'bbox': self.bbox,
+                'datetime': f'{self.start_date}/{self.end_date}',
                 'limit': limit
             }
-            self.items = self.stac_service.search(self.query)
+            self.items = self.stac_client.search(self.query)
         except:
             raise RuntimeError("Connection refused!")
 
@@ -138,7 +139,7 @@ class DataCube():
                 available_bands = item.get('properties').get('eo:bands')
                 for band in available_bands:
                     band_common_name = str(band.get('common_name'))
-                    if band_common_name in query_bands:
+                    if band_common_name in self.query_bands:
                         # Cria um dicionário com cada chave sendo o nome comum da banda e o nome dado pelo item
                         bands[band_common_name] = band.get('name')
                     else:
@@ -147,7 +148,7 @@ class DataCube():
                     Image(
                         item=item,
                         bands=bands,
-                        bbox=self.query['bbox']
+                        bbox=self.bbox
                     )
                 )
 
@@ -163,7 +164,7 @@ class DataCube():
                 '%Y-%m-%dT%H:%M:%S'
             )
             x_data[date] = []
-            for band in query_bands:
+            for band in self.query_bands:
                 data = image.getBand(band)
                 longitude = list(range(0, len(data[0])))
                 latitude = list(range(0, len(data)))
@@ -190,7 +191,8 @@ class DataCube():
         self.data_array = xr.DataArray(
             np.array(time_series),
             coords=[self.query_bands, timeline, latitude, longitude],
-            dims=["band", "time", "latitude", "longitude"]
+            dims=["band", "time", "latitude", "longitude"],
+            name=["DataCube"]
         )
 
         self.data_array.attrs = self.getDescription()
@@ -206,7 +208,7 @@ class DataCube():
     def getCollections(self):
         """Return a list with available collections from STAC."""
         try:
-            return list(self.stac_service.collections.keys())
+            return list(self.stac_client.collections.keys())
         except:
             return None
 
@@ -222,7 +224,7 @@ class DataCube():
         try:
             description = {}
             for collection in self.collections:
-                response = self.stac_service.collections[collection]
+                response = self.stac_client.collections[collection]
                 description[collection] = {
                     "id": response["id"],
                     "title": response["title"],

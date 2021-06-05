@@ -153,4 +153,3 @@ class Spectral():
         array_rgb[:, :, 1] = green / green.max()
         array_rgb[:, :, 2] = blue / blue.max()
         return array_rgb
-
