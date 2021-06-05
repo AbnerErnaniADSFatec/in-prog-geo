@@ -19,7 +19,7 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 
 from .spectral import Spectral
 from .utils import Utils
-
+import datetime
 
 class Image():
     """Abstraction to rasters files collected by STAC.py.
@@ -45,6 +45,10 @@ class Image():
         """Build the Image Object for collected items from STAC."""
         self.utils = Utils()
         self.spectral = Spectral()
+        self.time = datetime.datetime.strptime(
+            item["properties"]["datetime"],
+            '%Y-%m-%dT%H:%M:%S'
+        )
         self.item = item
         self.bands = bands
         self.bbox = bbox

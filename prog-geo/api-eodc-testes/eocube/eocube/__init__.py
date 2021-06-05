@@ -18,3 +18,6 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 
 from .config import *
 from .eocube import *
+from .spectral import *
+from .image import *
+from .utils import *

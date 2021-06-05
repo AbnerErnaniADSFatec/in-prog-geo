@@ -21,13 +21,10 @@ import json
 import warnings
 
 import numpy as np
-import rasterio
 import requests
 import stac
 import wtss
 import xarray as xr
-from pyproj import CRS, Proj, transform
-from rasterio.windows import Window
 
 from eocube import config
 
@@ -113,28 +110,29 @@ class EOCube():
                 self.start_date = start_date
                 self.end_date = end_date
         except:
-            raise ValueError("Dates are not correctly formatted, should be %Y-%m-%d")
+            raise AttributeError("Dates are not correctly formatted, should be %Y-%m-%d")
 
-        self.query = None
-        self.items = None
-        self.images = []
+        self.timeline = []
+        self.data_images = {}
+        self.data_array = None
 
+        items = None
         try:
             # arazenar a query globalmente para utilizar os parametros de bounding box
             # e data inicial e final
-            self.query = {
+            items = self.stac_client.search({
                 'collections': self.collections,
                 'bbox': self.bbox,
                 'datetime': f'{self.start_date}/{self.end_date}',
                 'limit': limit
-            }
-            self.items = self.stac_client.search(self.query)
+            })
         except:
             raise RuntimeError("Connection refused!")
 
-        if self.items:
+        images = []
+        if items:
             # Cria uma lista de objetos Images com os items no STAC
-            for item in self.items.features:
+            for item in items.features:
                 bands = {}
                 available_bands = item.get('properties').get('eo:bands')
                 for band in available_bands:
@@ -144,7 +142,7 @@ class EOCube():
                         bands[band_common_name] = band.get('name')
                     else:
                         pass
-                self.images.append(
+                images.append(
                     Image(
                         item=item,
                         bands=bands,
@@ -153,31 +151,28 @@ class EOCube():
                 )
 
         # Verifica se o cubo de dados foi criado com sucesso
-        if len(self.images) == 0:
+        if len(images) == 0:
             raise ValueError("No data cube created!")
 
         x_data = {}
-
-        for image in self.getImages():
-            date = datetime.datetime.strptime(
-                image.item["properties"]["datetime"],
-                '%Y-%m-%dT%H:%M:%S'
-            )
+        for image in images:
+            date = image.time
+            self.data_images[date] = image
             x_data[date] = []
             for band in self.query_bands:
                 data = image.getBand(band)
-                longitude = list(range(0, len(data[0])))
-                latitude = list(range(0, len(data)))
+                x = list(range(0, len(data[0])))
+                y = list(range(0, len(data)))
                 x_data[date].append({
                     str(band): data
                 })
 
-        timeline = sorted(list(x_data.keys()))
-        data_timeline = {}
+        self.timeline = sorted(list(x_data.keys()))
 
+        data_timeline = {}
         for i in range(len(list(self.query_bands))):
             data_timeline[self.query_bands[i]] = []
-            for time in timeline:
+            for time in self.timeline:
                 data_timeline[self.query_bands[i]].append(
                     x_data[time][i][self.query_bands[i]]
                 )
@@ -190,20 +185,11 @@ class EOCube():
 
         self.data_array = xr.DataArray(
             np.array(time_series),
-            coords=[self.query_bands, timeline, latitude, longitude],
-            dims=["band", "time", "latitude", "longitude"],
+            coords=[self.query_bands, self.timeline, y, x],
+            dims=["band", "time", "y", "x"],
             name=["DataCube"]
         )
-
         self.data_array.attrs = self.getDescription()
-
-    def getDataCube(self):
-        """Return a xarray with available data cube."""
-        return self.data_array
-
-    def getImages(self):
-        """Return a list with available images collected by STAC."""
-        return self.images
 
     def getCollections(self):
         """Return a list with available collections from STAC."""
@@ -235,3 +221,93 @@ class EOCube():
             return description
         except:
             return None
+
+    def getImages(self):
+        """Return a list with available images collected by STAC."""
+        return self.data_images
+
+    def getDataCube(self):
+        """Return a xarray with available data cube."""
+        return self.data_array
+
+    def getTimeSeries(self, band, start_date, end_date, lon, lat):
+        _image = None
+        _start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        _end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        for time in self.timeline:
+            if time.year == _start_date.year and \
+                time.month == _start_date.month:
+                _image = self.data_images[time]
+                break
+        point = _image._afimCoordsToPoint(lon, lat, band)
+        return self.getDataCube().loc[
+            band,
+            start_date:end_date,
+            point[0], point[1]
+        ]
+
+    def searchByBand(self, band):
+        return self.getDataCube().loc[band]
+
+    def convertDataFrame(self, time_slice):
+        return data.isel(time = slice(slice)).to_dataframe()
+
+    def calculateNDVI(self, time):
+        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _data = self.data_images[_date].getNDVI()
+        _timeline = [_date]
+        _x = list(range(0, len(_data[0])))
+        _y = list(range(0, len(_data)))
+        result = xr.DataArray(
+            np.array([_data]),
+            coords=[_timeline, _y, _x],
+            dims=["time", "y", "x"],
+            name=["ImageNDVI"]
+        )
+        return result
+
+    def calculateNDWI(self, time):
+        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _data = self.data_images[_date].getNDWI()
+        _timeline = [_date]
+        _x = list(range(0, len(_data[0])))
+        _y = list(range(0, len(_data)))
+        result = xr.DataArray(
+            np.array([_data]),
+            coords=[_timeline, _y, _x],
+            dims=["time", "y", "x"],
+            name=["ImageNDVI"]
+        )
+        return result
+
+    def calculateNDBI(self, time):
+        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _data = self.data_images[_date].getNDBI()
+        _timeline = [_date]
+        _x = list(range(0, len(_data[0])))
+        _y = list(range(0, len(_data)))
+        result = xr.DataArray(
+            np.array([_data]),
+            coords=[_timeline, _y, _x],
+            dims=["time", "y", "x"],
+            name=["ImageNDVI"]
+        )
+        return result
+
+    def calculateColorComposition(self, time):
+        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _data = self.data_images[_date].getRGB()
+        _timeline = [_date]
+        _x = list(range(0, len(_data[0])))
+        _y = list(range(0, len(_data)))
+        result = xr.DataArray(
+            np.array([_data]),
+            coords=[_timeline, _y, _x],
+            dims=["time", "y", "x"],
+            name=["ImageNDVI"]
+        )
+        return result
