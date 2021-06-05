@@ -191,13 +191,6 @@ class EOCube():
         )
         self.data_array.attrs = self.getDescription()
 
-    def getCollections(self):
-        """Return a list with available collections from STAC."""
-        try:
-            return list(self.stac_client.collections.keys())
-        except:
-            return None
-
     def getDescription(self):
         """Return a description JSON by collection name from STAC.
 
@@ -239,6 +232,8 @@ class EOCube():
                 time.month == _start_date.month:
                 _image = self.data_images[time]
                 break
+        if not _image:
+            _image = self.data_images[self.timeline[0]]
         point = _image._afimCoordsToPoint(lon, lat, band)
         return self.getDataCube().loc[
             band,
@@ -265,6 +260,7 @@ class EOCube():
             dims=["time", "y", "x"],
             name=["ImageNDVI"]
         )
+        result.attrs = self.getDescription()
         return result
 
     def calculateNDWI(self, time):
@@ -278,8 +274,9 @@ class EOCube():
             np.array([_data]),
             coords=[_timeline, _y, _x],
             dims=["time", "y", "x"],
-            name=["ImageNDVI"]
+            name=["ImageNDWI"]
         )
+        result.attrs = self.getDescription()
         return result
 
     def calculateNDBI(self, time):
@@ -293,8 +290,9 @@ class EOCube():
             np.array([_data]),
             coords=[_timeline, _y, _x],
             dims=["time", "y", "x"],
-            name=["ImageNDVI"]
+            name=["ImageNDBI"]
         )
+        result.attrs = self.getDescription()
         return result
 
     def calculateColorComposition(self, time):
@@ -304,10 +302,12 @@ class EOCube():
         _timeline = [_date]
         _x = list(range(0, len(_data[0])))
         _y = list(range(0, len(_data)))
+        _rgb = ["red", "green", "blue"]
         result = xr.DataArray(
             np.array([_data]),
-            coords=[_timeline, _y, _x],
-            dims=["time", "y", "x"],
-            name=["ImageNDVI"]
+            coords=[_timeline, _y, _x, _rgb],
+            dims=["time", "y", "x", "rgb"],
+            name=["ColorComposition"]
         )
+        result.attrs = self.getDescription()
         return result
