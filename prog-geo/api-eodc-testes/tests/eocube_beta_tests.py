@@ -581,4 +581,3 @@ class EOCube():
                 plt.colorbar()
             plt.tight_layout()
             plt.show()
-
