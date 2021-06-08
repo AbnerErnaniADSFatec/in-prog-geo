@@ -1,6 +1,6 @@
 # Importações
-import indices
 import numpy as np
+import indices
 
 matriz_nir = np.array([[1, 1], [1, 1]])
 matriz_red = np.array([[1, 1], [1, 1]])

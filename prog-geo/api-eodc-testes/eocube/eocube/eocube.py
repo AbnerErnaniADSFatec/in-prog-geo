@@ -245,7 +245,7 @@ class EOCube():
         return self.getDataCube().loc[band]
 
     def convertDataFrame(self, time_slice):
-        return data.isel(time = slice(slice)).to_dataframe()
+        return self.getDataCube().isel(time = slice(slice)).to_dataframe()
 
     def calculateNDVI(self, time):
         _date = self.getDataCube().sel(time = time, method="nearest").time.values
