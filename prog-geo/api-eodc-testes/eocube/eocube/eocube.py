@@ -16,25 +16,24 @@ You can redistribute it and/or modify it under the terms of the GNU General Publ
 the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 """
 
-from ipywidgets import interact
-import matplotlib.pyplot as plt
-
 import datetime
 import json
 import warnings
 
+import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import stac
 import wtss
 import xarray as xr
 from dask import delayed
+from ipywidgets import interact
 
 from eocube import config
 
 from .image import Image
-from .utils import Utils
 from .spectral import Spectral
+from .utils import Utils
 
 warnings.filterwarnings("ignore")
 
