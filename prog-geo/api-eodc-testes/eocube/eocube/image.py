@@ -17,9 +17,11 @@ the Free Software Foundation; either version 2 of the License, or (at your optio
 """
 
 
+import datetime
+
 from .spectral import Spectral
 from .utils import Utils
-import datetime
+
 
 class Image():
     """Abstraction to rasters files collected by STAC.py.

@@ -16,6 +16,9 @@ You can redistribute it and/or modify it under the terms of the GNU General Publ
 the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 """
 
+from ipywidgets import interact
+import matplotlib.pyplot as plt
+
 import datetime
 import json
 import warnings
@@ -25,11 +28,13 @@ import requests
 import stac
 import wtss
 import xarray as xr
+from dask import delayed
 
 from eocube import config
 
 from .image import Image
 from .utils import Utils
+from .spectral import Spectral
 
 warnings.filterwarnings("ignore")
 
@@ -92,7 +97,7 @@ class EOCube():
         if not query_bands:
             raise AttributeError("Please insert a list of available bands with query_bands!")
         else:
-            self.query_bands = [band.lower() for band in query_bands]
+            self.query_bands = query_bands
 
         if not bbox:
             raise AttributeError("Please insert a bounding box parameter!")
@@ -136,12 +141,13 @@ class EOCube():
                 bands = {}
                 available_bands = item.get('properties').get('eo:bands')
                 for band in available_bands:
-                    band_common_name = str(band.get('common_name'))
+                    band_common_name = str(band.get('common_name', ''))
+                    band_name = str(band.get('name'))
+                    # Cria um dicionário com cada chave sendo o nome comum da banda e o nome dado pelo item
                     if band_common_name in self.query_bands:
-                        # Cria um dicionário com cada chave sendo o nome comum da banda e o nome dado pelo item
                         bands[band_common_name] = band.get('name')
-                    else:
-                        pass
+                    elif band_name in self.query_bands:
+                        bands[band_name] = band_name
                 images.append(
                     Image(
                         item=item,
@@ -160,9 +166,7 @@ class EOCube():
             self.data_images[date] = image
             x_data[date] = []
             for band in self.query_bands:
-                data = image.getBand(band)
-                x = list(range(0, len(data[0])))
-                y = list(range(0, len(data)))
+                data = delayed(image.getBand)(band)
                 x_data[date].append({
                     str(band): data
                 })
@@ -183,125 +187,107 @@ class EOCube():
                 data_timeline[band]
             )
 
+        self.description = {}
+        for collection in self.collections:
+            response = self.stac_client.collections[collection]
+            self.description[str(response["id"])] = str(response["title"])
+
         self.data_array = xr.DataArray(
             np.array(time_series),
-            coords=[self.query_bands, self.timeline, y, x],
-            dims=["band", "time", "y", "x"],
+            coords=[self.query_bands, self.timeline], #, y, x],
+            dims=["band", "time"], #, "y", "x"],
             name=["DataCube"]
         )
-        self.data_array.attrs = self.getDescription()
+        self.data_array.attrs = self.description
 
-    def getDescription(self):
-        """Return a description JSON by collection name from STAC.
-
-        ## Parameters
-
-        ### collection_name : string, required
-
-            The collection name available on getCollections() list.
-        """
-        try:
-            description = {}
-            for collection in self.collections:
-                response = self.stac_client.collections[collection]
-                description[collection] = {
-                    "id": response["id"],
-                    "title": response["title"],
-                    "descriptions": response["bdc:metadata"]["datacite"]["descriptions"],
-                    "extent": response["extent"],
-                    "properties": response["properties"]
-                }
-            return description
-        except:
-            return None
-
-    def getImages(self):
-        """Return a list with available images collected by STAC."""
-        return self.data_images
-
-    def getDataCube(self):
-        """Return a xarray with available data cube."""
-        return self.data_array
-
-    def getTimeSeries(self, band, start_date, end_date, lon, lat):
+    def getTimeSeries(self, band, lon, lat):
         _image = None
-        _start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-        _end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        _start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
+        _end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
         for time in self.timeline:
             if time.year == _start_date.year and \
                 time.month == _start_date.month:
                 _image = self.data_images[time]
                 break
+
         if not _image:
             _image = self.data_images[self.timeline[0]]
+
         point = _image._afimCoordsToPoint(lon, lat, band)
-        return self.getDataCube().loc[
-            band,
-            start_date:end_date,
-            point[0], point[1]
-        ]
 
-    def searchByBand(self, band):
-        return self.getDataCube().loc[band]
+        _data = self.data_array.loc[band, self.start_date:self.end_date]
 
-    def convertDataFrame(self, time_slice):
-        return self.getDataCube().isel(time = slice(slice)).to_dataframe()
+        result = []
+        for raster in _data.values:
+            result.append(raster.compute()[point[0]][point[1]])
+
+        _result = xr.DataArray(
+            np.array(result),
+            coords=[_data.time],
+            dims=["time"],
+            name=[f"TimeSeries{band}"]
+        )
+        _result.attrs = {
+            "longitude": lon,
+            "latitude": lat
+        }
+        return _result
 
     def calculateNDVI(self, time):
-        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = self.data_array.sel(time = time, method="nearest").time.values
         _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
         _data = self.data_images[_date].getNDVI()
         _timeline = [_date]
-        _x = list(range(0, len(_data[0])))
-        _y = list(range(0, len(_data)))
+        _x = list(range(0, _data.shape[1]))
+        _y = list(range(0, _data.shape[0]))
         result = xr.DataArray(
             np.array([_data]),
             coords=[_timeline, _y, _x],
             dims=["time", "y", "x"],
             name=["ImageNDVI"]
         )
-        result.attrs = self.getDescription()
+        result.attrs = self.description
         return result
 
     def calculateNDWI(self, time):
-        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = self.data_array.sel(time = time, method="nearest").time.values
         _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
         _data = self.data_images[_date].getNDWI()
         _timeline = [_date]
-        _x = list(range(0, len(_data[0])))
-        _y = list(range(0, len(_data)))
+        _x = list(range(0, _data.shape[1]))
+        _y = list(range(0, _data.shape[0]))
         result = xr.DataArray(
             np.array([_data]),
             coords=[_timeline, _y, _x],
             dims=["time", "y", "x"],
             name=["ImageNDWI"]
         )
-        result.attrs = self.getDescription()
+        result.attrs = self.description
         return result
 
     def calculateNDBI(self, time):
-        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = self.data_array.sel(time = time, method="nearest").time.values
         _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
         _data = self.data_images[_date].getNDBI()
         _timeline = [_date]
-        _x = list(range(0, len(_data[0])))
-        _y = list(range(0, len(_data)))
+        _x = list(range(0, _data.shape[1]))
+        _y = list(range(0, _data.shape[0]))
         result = xr.DataArray(
             np.array([_data]),
             coords=[_timeline, _y, _x],
             dims=["time", "y", "x"],
             name=["ImageNDBI"]
         )
-        result.attrs = self.getDescription()
+        result.attrs = self.description
         return result
 
     def calculateColorComposition(self, time):
-        _date = self.getDataCube().sel(time = time, method="nearest").time.values
+        _date = self.data_array.sel(time = time, method="nearest").time.values
         _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
         _data = self.data_images[_date].getRGB()
         _timeline = [_date]
-        _x = list(range(0, len(_data[0])))
-        _y = list(range(0, len(_data)))
+        _x = list(range(0, _data.shape[1]))
+        _y = list(range(0, _data.shape[0]))
         _rgb = ["red", "green", "blue"]
         result = xr.DataArray(
             np.array([_data]),
@@ -309,5 +295,65 @@ class EOCube():
             dims=["time", "y", "x", "rgb"],
             name=["ColorComposition"]
         )
-        result.attrs = self.getDescription()
+        result.attrs = self.description
         return result
+
+    def classifyDifference(self, band, start_date, end_date, limiar_min=0, limiar_max=0):
+        _date = self.data_array.sel(time = start_date, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        time_1 = _date
+        data_1 = self.data_images[_date].getBand(band)
+        _date = self.data_array.sel(time = end_date, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        time_2 = _date
+        data_2 = self.data_images[_date].getBand(band)
+        spectral = Spectral()
+        data_1 = spectral._format(data_1)
+        data_2 = spectral._format(data_2)
+        _data = None
+        if spectral._validate_shape(data_1, data_2):
+            diff = spectral._matrix_diff(data_1, data_2)
+            _data = spectral._classify_diff(diff, limiar_min=limiar_min, limiar_max=limiar_max)
+        else:
+            raise ValueError("Time 1 and 2 has different shapes!")
+        _timeline = [f"{time_1} - {time_2}"]
+        _x = list(range(0, _data.shape[1]))
+        _y = list(range(0, _data.shape[0]))
+        _result = xr.DataArray(
+            np.array([_data]),
+            coords=[_timeline, _y, _x],
+            dims=["time", "y", "x"],
+            name=["ClassifyDifference"]
+        )
+        return _result
+
+    def interactPlot(self, method):
+        method = method.lower()
+        @interact(date=self.timeline)
+        def sliderplot(date):
+            plt.figure(figsize=(25, 8))
+            if method == 'rgb':
+                plt.imshow(self.data_images[date].getRGB())
+                plt.title(f'\nComposição Colorida Verdadeira {date} \n')
+            elif method == 'ndvi':
+                colormap = plt.get_cmap('Greens', 1000)
+                plt.imshow(self.data_images[date].getNDVI(), cmap=colormap)
+                plt.title(f'\nNDVI - Normalized Difference Vegetation Index {date} \n')
+                plt.colorbar()
+            elif method == 'ndwi':
+                colormap = plt.get_cmap('Blues', 1000)
+                plt.imshow(self.data_images[date].getNDWI(), cmap=colormap)
+                plt.title(f'\nNDWI - Normalized Difference Water Index {date} \n')
+                plt.colorbar()
+            elif method == 'ndbi':
+                colormap = plt.get_cmap('Greys', 1000)
+                plt.imshow(self.data_images[date].getNDBI(), cmap=colormap)
+                plt.title(f'\nNDBI - Normalized Difference Built-up Index {date} \n')
+                plt.colorbar()
+            elif method in self.query_bands:
+                colormap = plt.get_cmap('Greys', 1000)
+                plt.imshow(self.data_images[date].getBand(method), cmap=colormap)
+                plt.title(f'\nComposição da Banda {method} {date} \n')
+                plt.colorbar()
+            plt.tight_layout()
+            plt.show()

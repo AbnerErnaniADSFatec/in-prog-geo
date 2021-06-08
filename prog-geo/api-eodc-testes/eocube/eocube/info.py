@@ -16,9 +16,23 @@ You can redistribute it and/or modify it under the terms of the GNU General Publ
 the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 """
 
-from .config import *
-from .eocube import *
-from .image import *
-from .info import *
-from .spectral import *
-from .utils import *
+import stac
+
+from eocube import config
+
+
+def collections():
+    """List all available collections from STAC."""
+    stac_client = stac.STAC(
+        config.STAC_URL,
+        access_token=config.ACCESS_TOKEN
+    )
+    return stac_client
+
+def describe(collection):
+    """Describe a given collection from STAC service."""
+    stac_client = stac.STAC(
+        config.STAC_URL,
+        access_token=config.ACCESS_TOKEN
+    )
+    return stac_client.collections[collection]

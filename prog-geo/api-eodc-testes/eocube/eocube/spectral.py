@@ -153,3 +153,29 @@ class Spectral():
         array_rgb[:, :, 1] = green / green.max()
         array_rgb[:, :, 2] = blue / blue.max()
         return array_rgb
+
+    def _format(self, matrix):
+        # Função para pré-processar matrizes
+        return matrix.astype(float)
+
+    def _validate_shape(self, matrix_t1, matrix_t2):
+        # Função para verificar se as dimensões das matrizes são equivalentes
+        return matrix_t1.shape == matrix_t2.shape
+
+    def _matrix_diff(self, matrix_t1, matrix_t2):
+        # Função para cálculo das diferenças entre duas matrizes
+        _result = matrix_t2 - matrix_t1
+        return _result
+
+    def _classify_diff(self, _result, limiar_min=0, limiar_max=0):
+        # Função para classificar as diferenças de uma matriz
+        if limiar_min > 0:
+            raise Exception("LimiarMin Inválido")
+        if limiar_max < 0:
+            raise Exception("LimiarMax Inválido")
+        # Criar uma matriz de zeros (com o mesmo shape da matriz resultante)
+        # limiar_min <= |delta| <= limiar_max
+        # Critério de mudança:
+        # As matrizes são consideradas iguais ou muito semelhantes
+        # As matrizes sofreram "grandes" alterações
+        return np.where(_result <= limiar_min, 1, np.where(_result <= limiar_max, 2, 1))
