@@ -34,7 +34,7 @@ Instalando a dependência `IPython` para utilizar o ambiente conda no jupyter:
 
     (eocube) $ conda install -c anaconda ipython ipykernel jupyter
 
-Para instalar as dependências específicas de cada exemplo [EO Cube](./eocube) e o serviço [EO Cube Server](./eocube-server), faremos uma conexão com o ambiente virtual criado anteriormente:
+Para instalar as dependências específicas de cada exemplo [EO Cube](./eocube) e o serviço [EO Cube](./eocube), faremos uma conexão com o ambiente virtual criado anteriormente:
 
 .. code-block:: shell
 
@@ -65,19 +65,19 @@ Atualizar o pacote `pip` e o `setuptools` para a instalação:
 
 .. code-block:: shell
 
-    (eocube) ~/eocube-server $ python -m pip install --upgrade pip setuptools
+    (eocube) ~/eocube $ python -m pip install --upgrade pip setuptools
 
 Realizar a instalação do pacote `GDAL` para a manipulação de imagens:
 
 .. code-block:: shell
 
-    (eocube) ~/eocube-server $ conda install GDAL
+    (eocube) ~/eocube $ conda install GDAL
 
 Instalar as depências utilizando o arquivo [`setup.py`](./setup.py):
 
 .. code-block:: shell
 
-    (eocube) ~/eocube-server $ python -m pip install -e .[all]
+    (eocube) ~/eocube $ python -m pip install -e .[all]
 
 Execução
 --------
