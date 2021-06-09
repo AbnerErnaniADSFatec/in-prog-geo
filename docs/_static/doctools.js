@@ -229,7 +229,7 @@ var Documentation = {
           body.highlightText(this.toLowerCase(), 'highlighted');
         });
       }, 10);
-      $('<p class="highlight-link"><a href="https://raw.githubusercontent.com/AbnerErnaniADSFatec/in-prog-geo/master/docs/javascript:Documentation.' +
+      $('<p class="highlight-link"><a href="javascript:Documentation.' +
         'hideSearchWords()">' + _('Hide Search Matches') + '</a></p>')
           .appendTo($('#searchbox'));
     }
