@@ -174,8 +174,8 @@ class Spectral():
         if limiar_max < 0:
             raise Exception("LimiarMax Inválido")
         # Criar uma matriz de zeros (com o mesmo shape da matriz resultante)
-        # limiar_min <= |delta| <= limiar_max
+        # limiar_min <= |_result| <= limiar_max
         # Critério de mudança:
         # As matrizes são consideradas iguais ou muito semelhantes
         # As matrizes sofreram "grandes" alterações
-        return np.where(_result <= limiar_min, 1, np.where(_result <= limiar_max, 2, 1))
+        return np.where(_result <= limiar_min, 0, np.where(_result <= limiar_max, 1, 0))

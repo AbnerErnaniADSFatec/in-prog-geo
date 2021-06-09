@@ -38,7 +38,7 @@ from .utils import Utils
 warnings.filterwarnings("ignore")
 
 
-class EOCube():
+class DataCube():
     """Abstraction to create earth observation data cubes using images collected by STAC.py.
     Create a data cube using images collected from STAC using Image abstration.
 
@@ -199,10 +199,70 @@ class EOCube():
         )
         self.data_array.attrs = self.description
 
-    def getTimeSeries(self, band, lon, lat):
+    def nearTime(self, time):
+        _date = self.data_array.sel(time = time, method="nearest").time.values
+        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        return _date
+
+    def search(self, band=None, time=None, start_date=None, end_date=None):
+        result = None
+        if start_date and end_date:
+            _start_date = self.nearTime(start_date)
+            _end_date = self.nearTime(end_date)
+        else:
+            _start_date = self.nearTime(self.start_date)
+            _end_date = self.nearTime(self.end_date)
+        if band:
+            if time:
+                _date = self.nearTime(time)
+                _timeline = [_date]
+                _data = self.data_array.loc[band, _date].values.reshape(1)
+            else:
+                _data = self.data_array.loc[band, _start_date:_end_date]
+                _timeline = _data.time.values
+            _result = []
+            for raster in _data.values:
+                value = raster.compute()
+                _result.append(value)
+                _x = list(range(0, value.shape[1]))
+                _y = list(range(0, value.shape[0]))
+            result = xr.DataArray(
+                np.array(_result),
+                coords=[_timeline, _y, _x],
+                dims=["time", "y", "x"],
+                name=[f"ResultSearch_{band}"]
+            )
+        else:
+            _bands = self.query_bands
+            _timeline = self.timeline
+            _data = []
+            for band in _bands:
+                d = self.data_array.loc[band].values
+                _data.append(d)
+                _y = list(range(0, d.values.shape[1]))
+                _x = list(range(0, d.values.shape[2]))
+            result = xr.DataArray(
+                np.array(_data),
+                coords=[_bands, _timeline,_y, _x],
+                dims=["band", "time", "y", "x"],
+                name=["DataCube"]
+            )
+        result.attrs = self.description
+        return result
+
+    def getTimeSeries(self, band=None, lon=None, lat=None, start_date=None, end_date=None):
         _image = None
-        _start_date = datetime.datetime.strptime(self.start_date, '%Y-%m-%d')
-        _end_date = datetime.datetime.strptime(self.end_date, '%Y-%m-%d')
+
+        if start_date and end_date:
+            start = start_date
+            end = end_date
+        else:
+            start = self.start_date
+            end = self.end_date
+
+        _start_date = datetime.datetime.strptime(start, '%Y-%m-%d')
+        _end_date = datetime.datetime.strptime(end, '%Y-%m-%d')
+
         for time in self.timeline:
             if time.year == _start_date.year and \
                 time.month == _start_date.month:
@@ -214,7 +274,7 @@ class EOCube():
 
         point = _image._afimCoordsToPoint(lon, lat, band)
 
-        _data = self.data_array.loc[band, self.start_date:self.end_date]
+        _data = self.data_array.loc[band, _start_date:_end_date]
 
         result = []
         for raster in _data.values:
@@ -224,7 +284,7 @@ class EOCube():
             np.array(result),
             coords=[_data.time],
             dims=["time"],
-            name=[f"TimeSeries{band}"]
+            name=[f"TimeSeries_{band}"]
         )
         _result.attrs = {
             "longitude": lon,
@@ -233,8 +293,7 @@ class EOCube():
         return _result
 
     def calculateNDVI(self, time):
-        _date = self.data_array.sel(time = time, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _date = self.nearTime(time)
         _data = self.data_images[_date].getNDVI()
         _timeline = [_date]
         _x = list(range(0, _data.shape[1]))
@@ -249,8 +308,7 @@ class EOCube():
         return result
 
     def calculateNDWI(self, time):
-        _date = self.data_array.sel(time = time, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _date = self.nearTime(time)
         _data = self.data_images[_date].getNDWI()
         _timeline = [_date]
         _x = list(range(0, _data.shape[1]))
@@ -265,8 +323,7 @@ class EOCube():
         return result
 
     def calculateNDBI(self, time):
-        _date = self.data_array.sel(time = time, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _date = self.nearTime(time)
         _data = self.data_images[_date].getNDBI()
         _timeline = [_date]
         _x = list(range(0, _data.shape[1]))
@@ -281,8 +338,7 @@ class EOCube():
         return result
 
     def calculateColorComposition(self, time):
-        _date = self.data_array.sel(time = time, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
+        _date = self.nearTime(time)
         _data = self.data_images[_date].getRGB()
         _timeline = [_date]
         _x = list(range(0, _data.shape[1]))
@@ -298,14 +354,10 @@ class EOCube():
         return result
 
     def classifyDifference(self, band, start_date, end_date, limiar_min=0, limiar_max=0):
-        _date = self.data_array.sel(time = start_date, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
-        time_1 = _date
-        data_1 = self.data_images[_date].getBand(band)
-        _date = self.data_array.sel(time = end_date, method="nearest").time.values
-        _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
-        time_2 = _date
-        data_2 = self.data_images[_date].getBand(band)
+        time_1 = self.nearTime(start_date)
+        data_1 = self.data_images[time_1].getBand(band)
+        time_2 = self.nearTime(end_date)
+        data_2 = self.data_images[time_2].getBand(band)
         spectral = Spectral()
         data_1 = spectral._format(data_1)
         data_2 = spectral._format(data_2)
@@ -354,5 +406,7 @@ class EOCube():
                 plt.imshow(self.data_images[date].getBand(method), cmap=colormap)
                 plt.title(f'\nComposição da Banda {method} {date} \n')
                 plt.colorbar()
+            else:
+                raise ValueError("Please insert a valid method rgb, ndvi, ndwi, ndbi, ... or any of selected bands!")
             plt.tight_layout()
             plt.show()
