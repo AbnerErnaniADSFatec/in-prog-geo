@@ -220,8 +220,9 @@ class DataCube():
             else:
                 _data = self.data_array.loc[band, _start_date:_end_date]
                 _timeline = _data.time.values
+                _data = _data.values
             _result = []
-            for raster in _data.values:
+            for raster in _data:
                 value = raster.compute()
                 _result.append(value)
                 _x = list(range(0, value.shape[1]))
