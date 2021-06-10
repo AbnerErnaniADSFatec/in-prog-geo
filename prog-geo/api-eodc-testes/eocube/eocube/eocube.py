@@ -277,6 +277,11 @@ class DataCube():
 
         _data = self.data_array.loc[band, _start_date:_end_date]
 
+        sample = _data.values[0].compute()
+
+        if point[0] > sample.shape[0] and point[1] > sample.shape[1]:
+            raise ValueError(f"Given point is out of bounding box {self.bbox}")
+
         result = []
         for raster in _data.values:
             result.append(raster.compute()[point[0]][point[1]])
@@ -285,7 +290,7 @@ class DataCube():
             np.array(result),
             coords=[_data.time],
             dims=["time"],
-            name=[f"TimeSeries_{band}"]
+            name=[f"TimeSeries_{band.upper()}"]
         )
         _result.attrs = {
             "longitude": lon,
@@ -383,6 +388,7 @@ class DataCube():
         method = method.lower()
         @interact(date=self.timeline)
         def sliderplot(date):
+            plt.clf()
             plt.figure(figsize=(25, 8))
             if method == 'rgb':
                 plt.imshow(self.data_images[date].getRGB())
@@ -405,7 +411,7 @@ class DataCube():
             elif method in self.query_bands:
                 colormap = plt.get_cmap('Greys', 1000)
                 plt.imshow(self.data_images[date].getBand(method), cmap=colormap)
-                plt.title(f'\nComposição da Banda {method} {date} \n')
+                plt.title(f'\nComposição da Banda {method.upper()} {date} \n')
                 plt.colorbar()
             else:
                 raise ValueError("Please insert a valid method rgb, ndvi, ndwi, ndbi, ... or any of selected bands!")
