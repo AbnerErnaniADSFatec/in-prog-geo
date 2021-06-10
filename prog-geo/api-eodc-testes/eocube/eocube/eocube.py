@@ -385,7 +385,6 @@ class DataCube():
         return _result
 
     def interactPlot(self, method):
-        method = method.lower()
         @interact(date=self.timeline)
         def sliderplot(date):
             plt.clf()
@@ -393,17 +392,17 @@ class DataCube():
             if method == 'rgb':
                 plt.imshow(self.data_images[date].getRGB())
                 plt.title(f'\nComposição Colorida Verdadeira {date} \n')
-            elif method == 'ndvi':
+            elif method == 'ndvi' and not (method in self.query_bands):
                 colormap = plt.get_cmap('Greens', 1000)
                 plt.imshow(self.data_images[date].getNDVI(), cmap=colormap)
                 plt.title(f'\nNDVI - Normalized Difference Vegetation Index {date} \n')
                 plt.colorbar()
-            elif method == 'ndwi':
+            elif method == 'ndwi' and not (method in self.query_bands):
                 colormap = plt.get_cmap('Blues', 1000)
                 plt.imshow(self.data_images[date].getNDWI(), cmap=colormap)
                 plt.title(f'\nNDWI - Normalized Difference Water Index {date} \n')
                 plt.colorbar()
-            elif method == 'ndbi':
+            elif method == 'ndbi' and not (method in self.query_bands):
                 colormap = plt.get_cmap('Greys', 1000)
                 plt.imshow(self.data_images[date].getNDBI(), cmap=colormap)
                 plt.title(f'\nNDBI - Normalized Difference Built-up Index {date} \n')
