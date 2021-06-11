@@ -37,15 +37,6 @@ Para instalar as dependências específicas de cada exemplo [EO Cube](./eocube) 
 Instalar as depêndencias para cada exemplo:
 
  - [EO Cube Server](./eocube-server);
- - [EO Cube](./eocube).
-
-## Documentação e Testes
-
-Construção da documentação e execução dos testes unitários para a API e o pacote EOCube `./help/build/index.html`.
-
-~~~shell
-(eocube) $ sudo chmod +x ./build.sh && ./build.sh
-~~~
 
 ## Execução
 
