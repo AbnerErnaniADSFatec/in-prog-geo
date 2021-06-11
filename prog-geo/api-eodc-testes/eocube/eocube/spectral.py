@@ -21,21 +21,18 @@ import numpy as np
 
 
 class Spectral():
+    """Abstraction to deal with indexes and operations related to image processing."""
 
     def _normalize(self, array):
         """Normalize numpy arrays into scale 0.0 - 1.0.
 
-        ## Parameters
+        Parameters
 
-        ### array : nparray, required
+         - array <nparray, required>: The nparray multidimensional for normalize
 
-            The nparray multidimensional for normalize
+        Raise
 
-        ## Raise
-
-        ### ValueError
-
-            If the resquested nparray is invalid or not typed.
+         - ValueError: If the resquested nparray is invalid or not typed.
         """
         # Using techniques from statistics for normalize
         array_min, array_max = array.min(), array.max()
@@ -44,25 +41,17 @@ class Spectral():
     def _ndvi(self, nir, red, cte_delta=1e-10):
         """Calculate the Normalized Difference Vegetation Index - NDVI.
 
-        ## Parameters
+        Parameters
 
-        ### nir : np.array, required
+         - nir <np.array, required>: A multidimensional nparray with next infrared values.
 
-            A multidimensional nparray with next infrared values.
+         - red <np.arrary, required>: A multidimensional nparray with band red values.
 
-        ### red : np.arrary, required
+         - cte_delta <float, optional>: A float number to prevent zero values on formula.
 
-            A multidimensional nparray with band red values.
+        Raise
 
-        ### cte_delta : float, optional
-
-            A float number to prevent zero values on formula.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested nparray is invalid or not typed.
+         - ValueError: If the resquested nparray is invalid or not typed.
         """
         # Função para cálculo do índice NDVI
         ndvi = (nir - red) / (nir + red + cte_delta)
@@ -71,25 +60,17 @@ class Spectral():
     def _ndwi(self, nir, green, cte_delta=1e-10):
         """Calculate the Normalized Difference Water Index - NDWI.
 
-        ## Parameters
+        Parameters
 
-        ### nir : np.array, required
+         - nir <np.array, required>: A multidimensional nparray with next infrared values.
 
-            A multidimensional nparray with next infrared values.
+         - green <np.arrary, required>: A multidimensional nparray with band green values.
 
-        ### green : np.arrary, required
+         - cte_delta <float, optional>: A float number to prevent zero values on formula.
 
-            A multidimensional nparray with band green values.
+        Raise
 
-        ### cte_delta : float, optional
-
-            A float number to prevent zero values on formula.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested nparray is invalid or not typed.
+         - ValueError: If the resquested nparray is invalid or not typed.
         """
         # Função para cálculo do índice NDWI
         ndwi = (green - nir) / (green + nir + cte_delta)
@@ -98,25 +79,17 @@ class Spectral():
     def _ndbi(self, nir, swir1, cte_delta=1e-10):
         """Calculate the Normalized Difference Built-up Index - NDBI.
 
-        ## Parameters
+        Parameters
 
-        ### nir : np.array, required
+         - nir <np.array, required>: A multidimensional nparray with next infrared values.
 
-            A multidimensional nparray with next infrared values.
+         - swir1 <np.arrary, required>: A multidimensional nparray with band swir1 values.
 
-        ### swir1 : np.arrary, required
+         - cte_delta <float, optional>: A float number to prevent zero values on formula.
 
-            A multidimensional nparray with band swir1 values.
+        Raise
 
-        ### cte_delta : float, optional
-
-            A float number to prevent zero values on formula.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested nparray is invalid or not typed.
+         - ValueError: If the resquested nparray is invalid or not typed.
         """
         # Função para cálculo do índice NDBI
         ndbi = (swir1 - nir) / (swir1 + nir + cte_delta)
@@ -125,25 +98,17 @@ class Spectral():
     def _rgb(self, red, green, blue):
         """Calculate the real color composition from image.
 
-        ## Parameters
+        Parameters
 
-        ### red : np.array, required
+         - red <np.array, required>: A multidimensional nparray with red values.
 
-            A multidimensional nparray with red values.
+         - green <np.arrary, required>: A multidimensional nparray with band green values.
 
-        ### green : np.arrary, required
+         - blue <np.array, required>: A multidimensional nparray with band blue values.
 
-            A multidimensional nparray with band green values.
+        Raise
 
-        ### blue : np.array, required
-
-            A multidimensional nparray with band blue values.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested nparray is invalid or not typed.
+         - ValueError: If the resquested nparray is invalid or not typed.
         """
         # Função para cálculo para a visualização da cor real da imagem
         linhas = blue.shape[0]
@@ -155,19 +120,67 @@ class Spectral():
         return array_rgb
 
     def _format(self, matrix):
+        """Preprocessing matrix formating all data to float
+
+        Parameters
+
+         - matrix <np.array, required>: A multidimensional matrix.
+
+        Raise
+
+         - ValueError: If the given matrix is not correctly formated.
+        """
         # Função para pré-processar matrizes
         return matrix.astype(float)
 
     def _validate_shape(self, matrix_t1, matrix_t2):
+        """Verify if two matrixes have the same dimension.
+
+        Parameters
+
+         - matrix_t1 <np.array, required>: A multidimensional matrix.
+
+         - matrix_t2 <np.array, required>: A multidimensional matrix.
+
+        Raise
+
+         - ValueError: If the given matrix is not correctly formated.
+        """
         # Função para verificar se as dimensões das matrizes são equivalentes
         return matrix_t1.shape == matrix_t2.shape
 
     def _matrix_diff(self, matrix_t1, matrix_t2):
+        """Calculate the arithmetic difference (matrix_t1 - matrix_t).
+
+        Parameters
+
+         - matrix_t1 <np.array, required>: A multidimensional matrix.
+
+         - matrix_t2 <np.array, required>: A multidimensional matrix.
+
+        Raise
+
+         - ValueError: If the given matrix is not correctly formated.
+        """
         # Função para cálculo das diferenças entre duas matrizes
         _result = matrix_t2 - matrix_t1
         return _result
 
     def _classify_diff(self, _result, limiar_min=0, limiar_max=0):
+        """Classify difference based on limiar min and max.
+
+        Parameters
+
+         - _result <np.array, required>: A multidimensional matrix with arithmetic difference.
+
+         - limiar_min <float, required>: The minimum value classified to difference.
+
+         - limiar_max <float, required>: The maximum value classified to difference to complete the interval.
+
+        Raise
+
+         - ValueError: If the given matrix is not correctly formated.
+        """
         # Função para classificar as diferenças de uma matriz
         if limiar_min > 0:
             raise Exception("LimiarMin Inválido")

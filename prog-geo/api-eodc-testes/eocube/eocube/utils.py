@@ -27,25 +27,17 @@ class Utils():
     def _response(self, url, json_obj=False, obj=None):
         """Get response JSON from url using object.
 
-        ## Parameters
+        Parameters
 
-        ### url : string, required
+         - url <string, required>: The site or service url.
 
-            The site or service url.
+         - json_obj <boolean, optional>: If there is a JSON object to POST (default is False).
 
-        ### json_obj : boolean, optional
+         - obj <dictionary, optional>: Request the JSON object for POST type, ignored if `json_obj` is False (default is None).
 
-            If there is a JSON object to POST (default is False).
+        Raise
 
-        ### obj : dictionary, optional
-
-            Request the JSON object for POST type, ignored if `json_obj` is False (default is None).
-
-        ## Raise
-
-        ### HttpErrors
-
-            If the resquested url is not valid or not exist.
+         - HttpErrors: If the resquested url is not valid or not exist.
         """
         # Headers for request on POST by default
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -60,17 +52,13 @@ class Utils():
     def _validateBBOX(self, bbox):
         """Validate an input bounding box from user.
 
-        ## Parameters
+        Parameters
 
-        ### bbox : array, required
+         - bbox <list of int, required>: An array with longitute e latitude of bounds [var_long_min, var_lat_min, var_long_max, var_lat_max].
 
-            An array with longitute e latitude of bounds [var_long_min, var_lat_min, var_long_max, var_lat_max].
+        Raise
 
-        ## Raise
-
-        ### ValueError
-
-            If the resquested coordinate is invalid or not typed.
+         - ValueError: If the resquested coordinate is invalid or not typed.
         """
         var_long_min, var_lat_min, var_long_max, var_lat_max = bbox
 
@@ -92,25 +80,17 @@ class Utils():
     def _afimPointsToCoord(self, raster_file, x, y):
         """Calculate the long lat of a given point from band matrix.
 
-        ## Parameters
+        Parameters
 
-        ### raster_file : string, required
+         - raster_file <string, required>: The raster file path
 
-            The raster file path
+         - x <int, required>: For colunms.
 
-        ### x : int, required
+         - y <int, required>: For lines.
 
-            For colunms.
+        Raise
 
-        ### y : int, required
-
-            For lines.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested coordinate is invalid or not typed.
+         - ValueError: If the resquested coordinate is invalid or not typed.
         """
         with rasterio.open(raster_file) as dataset:
             coord = dataset.transform * (y, x)
@@ -124,25 +104,17 @@ class Utils():
     def _afimCoordsToPoint(self, raster_file, lon, lat):
         """Calculate the point of a given long lat from band matrix.
 
-        ## Parameters
+        Parameters
 
-        ### raster_file : string, required
+         - raster_file <string, required>: The raster file path
 
-            The raster file path
+         - lon <float, required>: For longitude EPSG:4326.
 
-        ### lon : float, required
+         - lat <float, required>: For latitude EPSG:4326.
 
-            For colunms.
+        Raise
 
-        ### lat : float, required
-
-            For lines.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested coordinate is invalid or not typed.
+         - ValueError: If the resquested coordinate is invalid or not typed.
         """
         with rasterio.open(raster_file) as dataset:
             coord = transform(

@@ -26,21 +26,23 @@ from .utils import Utils
 class Image():
     """Abstraction to rasters files collected by STAC.py.
 
-    ## Parameters
+    Parameters
 
-    ### item : ItemCollection, required
+     - item <ItemCollection, required>: The ItemCollection from STAC Python Library. GeoJSON Feature Collection of STAC Items.
 
-        The ItemCollection from STAC Python Library.
-        GeoJSON Feature Collection of STAC Items.
+     - bands <dictionary, required>: A python dictionary with bands real name referenced by key with commom name.
 
-    ### bands : dictionary, required
+     - bbox <tupple, required>: The bounding box value with longitude and latitude values.
 
-        A python dictionary with bands real name
-        referenced by key with commom name.
+    Methods:
 
-    ### bbox : tupple, required
+        listBands, getBand,
+        getNDVI, getNDWI, getNDBI, getRGB,
+        _afimPointsToCoord, _afimCoordsToPoint
 
-        The bounding box value with longitude and latitude values.
+    Raise
+
+     - AttributeError and ValueError: If a given parameter is not correctly formatted.
     """
 
     def __init__(self, item, bands, bbox):
@@ -62,21 +64,15 @@ class Image():
     def getBand(self, band):
         """Get bands from STAC item using commom name for band.
 
-        ## Parameters
+        Parameters
 
-        ### band : string, required
+         - band <string, required>: The band commom name.
 
-            The band commom name.
+         - wd <rasterio.Window, optional>: The window from rasterio abstration for crop images.
 
-        ### wd : rasterio.Window, optional
+        Raise
 
-            The window from rasterio abstration for crop images.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested key not exists.
+         - ValueError: If the resquested key not exists.
         """
         return self.item.read(
             self.bands[band], bbox=self.bbox
@@ -85,11 +81,9 @@ class Image():
     def getNDVI(self):
         """Calculate the Normalized Difference Vegetation Index - NDVI by image colected values.
 
-        ## Raise
+        Raise
 
-        ### KeyError
-
-            If the required band does not exist.
+         - KeyError: If the required band does not exist.
         """
         return self.spectral._ndvi(
             nir=self.getBand("nir"),
@@ -99,11 +93,9 @@ class Image():
     def getNDWI(self):
         """Calculate the Normalized Difference Water Index - NDWI by image colected values.
 
-        ## Raise
+        Raise
 
-        ### KeyError
-
-            If the required band does not exist.
+         - KeyError: If the required band does not exist.
         """
         return self.spectral._ndwi(
             nir=self.getBand("nir"),
@@ -113,11 +105,9 @@ class Image():
     def getNDBI(self):
         """Calculate the Normalized Difference Built-up Index - NDBI by image colected values.
 
-        ## Raise
+        Raise
 
-        ### KeyError
-
-            If the required band does not exist.
+         - KeyError: If the required band does not exist.
         """
         return self.spectral._ndbi(
             nir=self.getBand("nir"),
@@ -127,11 +117,9 @@ class Image():
     def getRGB(self):
         """Get thee RGB image with real color.
 
-        ## Raise
+        Raise
 
-        ### KeyError
-
-            If the required band does not exist.
+         - KeyError: If the required band does not exist.
         """
         return self.spectral._rgb(
             red=self.getBand("red"),
@@ -142,26 +130,17 @@ class Image():
     def _afimPointsToCoord(self, x, y, band):
         """Calculate the long lat of a given point from band matrix.
 
-        ## Parameters
+        Parameters
 
-        ### x : int, required
+         - x <int, required>: For colunms.
 
-            For colunms.
+         - y <int, required>: For lines.
 
-        ### y : int, required
+         - band <string, required>: An available band to create a dataset.
 
-            For lines.
+        Raise
 
-        ### band : string, required
-
-            An available band to create a dataset.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested coordinate is invalid or not typed.
-
+         - ValueError: If the resquested coordinate is invalid or not typed.
         """
         link = self.item.assets[
             self.bands[band]
@@ -172,27 +151,19 @@ class Image():
         return coordX
 
     def _afimCoordsToPoint(self, lon, lat, band):
-        """Calculate the point of a given long lat from band matrix.
+        """Calculate the x y of a given point lon lat from band matrix.
 
-        ## Parameters
+        Parameters
 
-        ### raster_file : string, required
+         - lon <float, required>: For longitude EPSG:4326.
 
-            The raster file path
+         - lat <float, required>: For latitude EPSG:4326.
 
-        ### lon : float, required
+         - band <string, required>: An available band to create a dataset.
 
-            For colunms.
+        Raise
 
-        ### lat : float, required
-
-            For lines.
-
-        ## Raise
-
-        ### ValueError
-
-            If the resquested coordinate is invalid or not typed.
+         - ValueError: If the resquested coordinate is invalid or not typed.
         """
         link = self.item.assets[
             self.bands[band]

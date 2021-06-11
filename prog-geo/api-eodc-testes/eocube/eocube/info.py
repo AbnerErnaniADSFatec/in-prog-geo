@@ -14,6 +14,12 @@ email                : none@inpe.br
 This program is free software.
 You can redistribute it and/or modify it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+Get information from STAC Service saved on config file.
+
+Methods:
+
+    collections, describe
 """
 
 import stac
@@ -30,7 +36,12 @@ def collections():
     return stac_client
 
 def describe(collection):
-    """Describe a given collection from STAC service."""
+    """Describe a given collection from STAC service.
+
+    Parameters
+
+     - collection <string, required>: the name of collection of interest listed in STAC.collections.
+    """
     stac_client = stac.STAC(
         config.STAC_URL,
         access_token=config.ACCESS_TOKEN

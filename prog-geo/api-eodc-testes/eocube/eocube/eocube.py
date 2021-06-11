@@ -42,31 +42,31 @@ class DataCube():
     """Abstraction to create earth observation data cubes using images collected by STAC.py.
     Create a data cube using images collected from STAC using Image abstration.
 
-    ## Parameters
+    Parameters
 
-    ### collections : string list, required
+     - collections <list of strings, required>: The list with name of collections selected by user.
 
-        The list with name of collections selected by user.
+     - query_bands <list of strings, required>: The list with commom name of bands (nir, ndvi, red, ... see info.collections).
 
-    ### query_bands : string list, required
+     - bbox <tupple, required>: The bounding box with user Area of Interest.
 
-        The list with commom name of bands [].
+     - start_date <string, required>: The string start date formated "yyyy-mm-dd" to complete the interval.
 
-    ### bbox : tupple, required
+     - end_date <string, required>: The string end date formated "yyyy-mm-dd" to complete the interval.
 
-        The bounding box with user Area of Interest.
+     - limit <int, required>: The limit of response images in decreasing order.
 
-    ### start_date : string, required
+    Methods:
 
-        The string start date formated "yyyy-mm-dd" to complete the interval.
+        nearTime, search, getTimeSeries,
+        calculateNDVI, calculateNDBI, calculateNDWI, calculateColorComposition,
+        classifyDifference, interactPlot.
 
-    ### end_date : string, required
+    Raise
 
-        The string end date formated "yyyy-mm-dd" to complete the interval.
+     - AttributeError and ValueError: If a given parameter is not correctly formatted.
 
-    ### limit : int, required
-
-        The limit of response images.
+     - RuntimeError: If the STAC service is unreachable caused by connection lost of client or service.
     """
 
     def __init__(self, collections=[], query_bands=[], bbox=(), start_date=None, end_date=None, limit=30):
@@ -200,11 +200,38 @@ class DataCube():
         self.data_array.attrs = self.description
 
     def nearTime(self, time):
+        """Search in all dataset a date time near to given time.
+        Return a date time from dataset timeline.
+
+        Parameters
+
+         - time <datetime, required>: the given date time to search formated "yyyy-mm-dd".
+
+        Raise
+
+         - ValueError: If time is not correctly formatted.
+        """
         _date = self.data_array.sel(time = time, method="nearest").time.values
         _date = datetime.datetime.utcfromtimestamp(_date.tolist()/1e9)
         return _date
 
     def search(self, band=None, time=None, start_date=None, end_date=None):
+        """Search method to retrieve data from delayed dataset and return all dataset for black searchs but takes longer.
+
+        Parameters:
+
+         - band <string, optional>: The commom name of band (nir, ndvi, red, ... see info.collections).
+
+         - time <string, optional>: The given time to retrieve a sigle image formated "yyyy-mm-dd".
+
+         - start_date <string, optional>: The string start date formated "yyyy-mm-dd" to complete the interval.
+
+         - end_date <string, optional>: The string end date formated "yyyy-mm-dd" to complete the interval and retrieve a dataset.
+
+        Raise:
+
+         - KeyError: If the given parameter not exists.
+        """
         result = None
         if start_date and end_date:
             _start_date = self.nearTime(start_date)
@@ -252,6 +279,24 @@ class DataCube():
         return result
 
     def getTimeSeries(self, band=None, lon=None, lat=None, start_date=None, end_date=None):
+        """Get time series band values from a given point and timeline.
+
+        Parameters:
+
+         - band <string, optional>: The commom name of band (nir, ndvi, red, ... see info.collections).
+
+         - lon <float, optional>: The given longitude of point (EPSG:4326).
+
+         - lat <float, optional>: The given latitude of point (EPSG:4326).
+
+         - start_date <string, optional>: The string start date formated "yyyy-mm-dd" to complete the interval.
+
+         - end_date <string, optional>: The string end date formated "yyyy-mm-dd" to complete the interval and retrieve a dataset.
+
+        Raise:
+
+         - KeyError: If the given parameter not exists.
+        """
         _image = None
 
         if start_date and end_date:
@@ -299,6 +344,16 @@ class DataCube():
         return _result
 
     def calculateNDVI(self, time):
+        """Calculate the Normalized Difference Vegetation Index - NDVI of a given period.
+
+        Parameters
+
+         - time <string, required>: The given time to retrieve a sigle image formated "yyyy-mm-dd".
+
+        Raise:
+
+         - KeyError: No data for given date time selected.
+        """
         _date = self.nearTime(time)
         _data = self.data_images[_date].getNDVI()
         _timeline = [_date]
@@ -314,6 +369,16 @@ class DataCube():
         return result
 
     def calculateNDWI(self, time):
+        """Calculate the Normalized Difference Water Index - NDVI of a given period.
+
+        Parameters
+
+         - time <string, required>: The given time to retrieve a sigle image formated "yyyy-mm-dd".
+
+        Raise:
+
+         - KeyError: No data for given date time selected.
+        """
         _date = self.nearTime(time)
         _data = self.data_images[_date].getNDWI()
         _timeline = [_date]
@@ -329,6 +394,16 @@ class DataCube():
         return result
 
     def calculateNDBI(self, time):
+        """Calculate the Normalized Difference Built-up Index - NDVI of a given period.
+
+        Parameters
+
+         - time <string, required>: The given time to retrieve a sigle image formated "yyyy-mm-dd".
+
+        Raise:
+
+         - KeyError: No data for given date time selected.
+        """
         _date = self.nearTime(time)
         _data = self.data_images[_date].getNDBI()
         _timeline = [_date]
@@ -344,6 +419,16 @@ class DataCube():
         return result
 
     def calculateColorComposition(self, time):
+        """Calculate the color composition RGB of a given period.
+
+        Parameters
+
+         - time <string, required>: The given time to retrieve a sigle image formated "yyyy-mm-dd".
+
+        Raise:
+
+         - KeyError: No data for given date time selected.
+        """
         _date = self.nearTime(time)
         _data = self.data_images[_date].getRGB()
         _timeline = [_date]
@@ -360,6 +445,24 @@ class DataCube():
         return result
 
     def classifyDifference(self, band, start_date, end_date, limiar_min=0, limiar_max=0):
+        """Classify two different images with start and end date based on limiar mim and max.
+
+        Parameters:
+
+         - band <string, required>: The commom name of band (nir, ndvi, red, ... see info.collections).
+
+         - start_date <string, required>: The string start date formated "yyyy-mm-dd" to complete the interval.
+
+         - end_date <string, required>: The string end date formated "yyyy-mm-dd" to complete the interval and retrieve a dataset.
+
+         - limiar_min <float, required>: The minimum value classified to difference.
+
+         - limiar_max <float, required>: The maximum value classified to difference to complete the interval.
+
+        Raise:
+
+         - KeyError: If the given parameter not exists.
+        """
         time_1 = self.nearTime(start_date)
         data_1 = self.data_images[time_1].getBand(band)
         time_2 = self.nearTime(end_date)
@@ -385,6 +488,16 @@ class DataCube():
         return _result
 
     def interactPlot(self, method):
+        """Return all dataset with a interactive plot date time slider.
+
+        Parameters:
+
+         - method <string, required>: The method like rgb, ndvi, ndwi, ndbi, ... or any of selected bands.
+
+        Raise:
+
+         - KeyError: If the given parameter not exists.
+        """
         @interact(date=self.timeline)
         def sliderplot(date):
             plt.clf()
