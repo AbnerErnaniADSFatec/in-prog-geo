@@ -97,7 +97,7 @@ Construção da documentação e execução dos testes unitários para a API e o
 
 .. code-block:: shell
 
-    eocube) $ sudo chmod +x ./build.sh && ./build.sh
+    (eocube) $ sudo chmod +x ./build.sh && ./build.sh
 
 Execução
 --------
