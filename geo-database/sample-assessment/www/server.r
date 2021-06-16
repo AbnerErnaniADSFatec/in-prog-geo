@@ -1,3 +1,35 @@
+point_to_shape_sp <- function (data.tb, name_file = "NULL") {
+  group_shape <- dplyr::select(data.tb,
+    longitude,
+    latitude,
+    start_date,
+    end_date,
+    label,
+    id_sample,
+    id_neuron,
+    cluster,
+    year
+  )
+
+  sp_data.tb.df <- as.data.frame(group_shape)
+
+  points_SF <- as.data.frame(sp_data.tb.df)
+  xy <- points_SF[, c(1, 2)]
+
+  sp_data.df <- sp::SpatialPointsDataFrame(
+    coords = xy,
+    data = points_SF,
+    proj4string = sp::CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+  )
+
+  # rgdal::writeOGR(
+  #   sp_data.df,
+  #   dsn = '.',
+  #   layer = name_file,
+  #   driver = "ESRI Shapefile"
+  # )
+}
+
 server <- function(input, output) {
 
   output$value <- renderPrint({ input$select })
@@ -19,7 +51,7 @@ server <- function(input, output) {
     readRDS(file$datapath)
   })
 
-  output$ts_plot <- renderPlot({
+  output$ts_plot <- renderPlotly({
     withProgress(message = 'Making plot', value = 0, {
 
       incProgress(1/4, detail = paste("Reading file", 1))
@@ -32,7 +64,8 @@ server <- function(input, output) {
 
       incProgress(1/4, detail = paste("Parsing RDS File", 3))
       input_data.tb <- readRDS(file$datapath)
-      plot(sits_select(input_data.tb, bands = input$select))
+      
+      ggplotly(sits_select(input_data.tb, bands = input$select))
 
       incProgress(1/4, detail = paste("Plotting File", 4))
     })

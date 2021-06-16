@@ -4,6 +4,7 @@ library(shinycssloaders)
 library(shinydashboard)
 library(sits)
 library(ggplot2)
+library(plotly)
 library(sf)
 
 source("www/interface.r")

@@ -47,7 +47,7 @@ ui <- dashboardPage(
           ),
           box(
             h3("Time Series Plot"),
-            plotOutput("ts_plot")
+            plotlyOutput("ts_plot")
           )
         )
       ),
